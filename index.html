@@ -364,8 +364,9 @@
     transition: transform 0.08s;
     image-rendering: pixelated;
     z-index: 2;
+    animation: idleBob 3s ease-in-out infinite;
   }
-  .mascot-wrap:active { transform: scale(0.94) translateY(2px); }
+  .mascot-wrap:active { transform: scale(0.94) translateY(2px); animation: none; }
   .mascot-wrap::before {
     content: "";
     position: absolute;
@@ -375,9 +376,18 @@
     z-index: -1;
     animation: pulse 3s ease-in-out infinite;
   }
+  .mascot-wrap.combo-hi::before {
+    background: radial-gradient(circle, rgba(255, 204, 51, 0.35), transparent 65%);
+    animation-duration: 1.2s;
+  }
+  .mascot-wrap.combo-hi { filter: drop-shadow(0 0 18px rgba(255, 204, 51, 0.6)); }
   @keyframes pulse {
     0%, 100% { transform: scale(1); opacity: 0.7; }
     50% { transform: scale(1.1); opacity: 1; }
+  }
+  @keyframes idleBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
   }
 
   /* Pedestal under mascot */
@@ -471,6 +481,102 @@
     0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; }
     100% { transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(180deg); opacity: 0; }
   }
+
+  /* Token-fly: small token icon flies from click toward the counter */
+  .token-fly {
+    position: fixed;
+    pointer-events: none;
+    z-index: 50;
+    font-size: 14px;
+    color: var(--accent-glow);
+    filter: drop-shadow(0 0 4px rgba(244, 160, 122, 0.6));
+    will-change: transform, opacity;
+    animation: tokenFly 0.7s cubic-bezier(0.5, -0.2, 0.7, 0.5) forwards;
+  }
+  @keyframes tokenFly {
+    0% { transform: translate(0,0) scale(1.2); opacity: 1; }
+    40% { transform: translate(calc(var(--dx) * 0.4), calc(var(--dy) * 0.4 - 30px)) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0.4); opacity: 0; }
+  }
+
+  /* Ambient background particles in the center area */
+  .ambient {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ambient-particle {
+    position: absolute;
+    font-size: 12px;
+    color: rgba(217, 119, 87, 0.35);
+    animation: drift 14s linear forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes drift {
+    0%   { transform: translate(0,0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) rotate(360deg); opacity: 0; }
+  }
+
+  /* Crit screen shake */
+  body.crit { animation: critShake 0.25s; }
+  @keyframes critShake {
+    0%, 100% { transform: translate(0); }
+    25% { transform: translate(-4px, 2px); }
+    50% { transform: translate(4px, -2px); }
+    75% { transform: translate(-2px, 1px); }
+  }
+
+  /* Token count flash when receiving tokens */
+  .count.flash { color: var(--gold) !important; text-shadow: 0 0 24px var(--gold); transition: color 0.1s; }
+
+  /* Confetti for achievements */
+  .confetti {
+    position: fixed;
+    width: 8px; height: 8px;
+    pointer-events: none;
+    z-index: 1500;
+    animation: confettiFall 1.6s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes confettiFall {
+    0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) rotate(720deg); opacity: 0; }
+  }
+
+  /* Production breakdown */
+  .prod-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .prod-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .prod-row .prod-icon {
+    width: 18px; height: 18px; border-radius: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    display: grid; place-items: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .prod-row .prod-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .prod-row .prod-pct { font-family: 'JetBrains Mono', monospace; color: var(--accent-glow); font-weight: 700; min-width: 38px; text-align: right; }
+  .prod-bar {
+    height: 3px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .prod-bar > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-glow)); border-radius: 2px; transition: width 0.4s ease; }
 
   .click-hint {
     position: absolute;
@@ -876,6 +982,18 @@
 
     <div>
       <div class="section-head">
+        <span>Production</span>
+        <span class="pill" id="prodTotal">0/s</span>
+      </div>
+      <div class="prod-list" id="prodList">
+        <div style="font-size:11px; color: var(--muted-dim); padding: 6px 0;">No automations yet — buy upgrades to see production.</div>
+      </div>
+    </div>
+
+    <hr/>
+
+    <div>
+      <div class="section-head">
         <span>Achievements</span>
         <span class="pill" id="achCount">0/0</span>
       </div>
@@ -908,6 +1026,7 @@
   </aside>
 
   <main class="center" id="center">
+    <div class="ambient" id="ambient"></div>
     <div class="title">
       Claude Clicker
       <small>vibe-coding the universe, one token at a time</small>
@@ -1033,6 +1152,8 @@ const state = {
   vibes: 0,
   ascensions: 0,
   lastSaveTime: Date.now(),
+  maxCombo: 0,
+  frenzyCount: 0,
 };
 let buyMult = 1;
 
@@ -1048,6 +1169,11 @@ const SHOP_AUTO = [
   { id: 'cluster',      name: 'GPU Cluster',   desc: 'Hot silicon, cold ambitions',        icon: '🏭', baseCost: 5_100_000_000, cps: 260_000 },
   { id: 'agi',          name: 'Almost AGI',    desc: "Don't tell the safety team",         icon: '🌌', baseCost: 75_000_000_000, cps: 1_600_000 },
   { id: 'multiverse',   name: 'Multiverse',    desc: 'Parallel Claudes, parallel tokens',  icon: '♾️', baseCost: 1_000_000_000_000, cps: 10_000_000 },
+  { id: 'timeloop',     name: 'Time Loop',     desc: 'Go back and click yourself',         icon: '⏳', baseCost: 14_000_000_000_000, cps: 65_000_000 },
+  { id: 'singularity',  name: 'Singularity',   desc: 'Recursive self-improvement go brrr', icon: '🕳️', baseCost: 200_000_000_000_000, cps: 420_000_000 },
+  { id: 'deity',        name: 'Token Deity',   desc: 'Tokens worship you back',            icon: '🛐', baseCost: 3_000_000_000_000_000, cps: 2_700_000_000 },
+  { id: 'omniverse',    name: 'Omniverse Mesh',desc: 'Every possible Claude, in parallel', icon: '🕸️', baseCost: 45_000_000_000_000_000, cps: 17_000_000_000 },
+  { id: 'transcend',    name: 'Transcendence', desc: 'You are the token now',              icon: '🌀', baseCost: 700_000_000_000_000_000, cps: 100_000_000_000 },
 ];
 
 const SHOP_CLICK = [
@@ -1058,6 +1184,9 @@ const SHOP_CLICK = [
   { id: 'finger',    name: 'Lucky Finger',     desc: '+5% click mult per level',    icon: '🫰', baseCost: 400_000,    multBonus: 0.05 },
   { id: 'lightning', name: 'Lightning Hand',   desc: '+200 per click',              icon: '⚡', baseCost: 4_500_000,  flat: 200 },
   { id: 'godmode',   name: 'God-Mode Click',   desc: '+50% click mult per level',   icon: '🌟', baseCost: 50_000_000, multBonus: 0.5 },
+  { id: 'quantum',   name: 'Quantum Click',    desc: '+5,000 per click',            icon: '⚛️', baseCost: 1_000_000_000,   flat: 5000 },
+  { id: 'chrono',    name: 'Chrono Gloves',    desc: '+100% click mult per level',  icon: '🧪', baseCost: 25_000_000_000,  multBonus: 1 },
+  { id: 'infinity',  name: 'Infinity Click',   desc: '+50,000 per click',           icon: '∞',  baseCost: 500_000_000_000, flat: 50000 },
 ];
 
 const ACHIEVEMENTS = [
@@ -1092,6 +1221,34 @@ const ACHIEVEMENTS = [
   { id: 'ascend1',    icon: '🪐', name: 'First ascension',        cond: s => (s.ascensions || 0) >= 1 },
   { id: 'vibes10',    icon: '💜', name: 'Vibe check',             cond: s => (s.vibes || 0) >= 10 },
   { id: 'vibes100',   icon: '🔮', name: 'Vibe lord',              cond: s => (s.vibes || 0) >= 100 },
+
+  // — Endgame tier —
+  { id: 'tok10t',     icon: '🌌', name: '10 trillion club',       cond: s => s.totalEarned >= 1e13 },
+  { id: 'tok100t',    icon: '🎆', name: 'Hundred trillion',       cond: s => s.totalEarned >= 1e14 },
+  { id: 'tok1qa',     icon: '💫', name: 'Quadrillionaire',        cond: s => s.totalEarned >= 1e15 },
+  { id: 'tok100qa',   icon: '🌟', name: 'Cosmic capital',         cond: s => s.totalEarned >= 1e17 },
+  { id: 'click50k',   icon: '⚙️', name: 'Fifty thousand clicks',  cond: s => s.totalClicks >= 50_000 },
+  { id: 'click500k',  icon: '🎯', name: 'Half-million clicks',    cond: s => s.totalClicks >= 500_000 },
+  { id: 'click1m',    icon: '🏹', name: 'Million clicker',        cond: s => s.totalClicks >= 1_000_000 },
+  { id: 'cps1b',      icon: '🌋', name: 'Billion per second',     cond: s => s.cps >= 1e9 },
+  { id: 'cps1t',      icon: '☄️', name: 'Trillion per second',    cond: s => s.cps >= 1e12 },
+  { id: 'cpc1m',      icon: '💢', name: 'Megaclick',              cond: s => effectiveCpc() >= 1e6 },
+  { id: 'cpc1b',      icon: '🦿', name: 'Gigaclick',              cond: s => effectiveCpc() >= 1e9 },
+  { id: 'vibes1k',    icon: '🪞', name: 'A thousand Vibes',       cond: s => (s.vibes || 0) >= 1000 },
+  { id: 'ascend10',   icon: '🌠', name: 'Decadent rebirth',       cond: s => (s.ascensions || 0) >= 10 },
+  { id: 'ascend100',  icon: '♻️', name: 'Eternal recurrence',     cond: s => (s.ascensions || 0) >= 100 },
+  { id: 'gold100',    icon: '🥮', name: 'Hoarder',                cond: s => (s.goldenClicked || 0) >= 100 },
+  { id: 'gold1k',     icon: '👁️', name: 'Goldsight',              cond: s => (s.goldenClicked || 0) >= 1000 },
+  { id: 'time1d',     icon: '🌅', name: 'One day in',             cond: s => (Date.now() - s.startedAt) > 24*60*60_000 },
+  { id: 'time1w',     icon: '📆', name: 'One week in',            cond: s => (Date.now() - s.startedAt) > 7*24*60*60_000 },
+  { id: 'buy100',     icon: '💼', name: '100 of a kind',          cond: s => Object.values(s.upgrades||{}).some(v => v >= 100) },
+  { id: 'buy500',     icon: '🏛️', name: '500 of a kind',          cond: s => Object.values(s.upgrades||{}).some(v => v >= 500) },
+  { id: 'maxcombo50', icon: '🥊', name: '50-combo',               cond: s => (s.maxCombo || 0) >= 50 },
+  { id: 'maxcombo200',icon: '⚔️', name: '200-combo',              cond: s => (s.maxCombo || 0) >= 200 },
+  { id: 'transcend1', icon: '🌀', name: 'Transcended',            cond: s => (s.upgrades.transcend || 0) >= 1 },
+  { id: 'all_late',   icon: '🪬', name: 'Endgame complete',       cond: s => ['timeloop','singularity','deity','omniverse','transcend'].every(k => (s.upgrades[k]||0) > 0) },
+  { id: 'frenzy10',   icon: '⚡', name: 'Frenzy fan',             cond: s => (s.frenzyCount || 0) >= 10 },
+  { id: 'frenzy50',   icon: '🌩️', name: 'Frenzy addict',          cond: s => (s.frenzyCount || 0) >= 50 },
 ];
 
 const NEWS = [
@@ -1254,6 +1411,46 @@ function tweenCount(target) {
   $('count').textContent = fmt(displayedCount);
 }
 
+function renderProduction() {
+  const list = $('prodList');
+  if (!list) return;
+  // collect contributions
+  const rows = [];
+  let total = 0;
+  for (const item of SHOP_AUTO) {
+    const owned = state.upgrades[item.id] || 0;
+    if (owned > 0) {
+      const contrib = owned * item.cps;
+      rows.push({ icon: item.icon, name: item.name, owned, contrib });
+      total += contrib;
+    }
+  }
+  // top 5 contributors
+  rows.sort((a, b) => b.contrib - a.contrib);
+  const top = rows.slice(0, 5);
+  if (top.length === 0) {
+    list.innerHTML = '<div style="font-size:11px; color: var(--muted-dim); padding: 6px 0;">No automations yet — buy upgrades to see production.</div>';
+    $('prodTotal').textContent = '0/s';
+    return;
+  }
+  // multiplied total includes frenzy + vibes
+  const liveTotal = total * frenzyMult() * vibeMult();
+  $('prodTotal').textContent = fmt(liveTotal) + '/s';
+  list.innerHTML = top.map(r => {
+    const pct = total > 0 ? (r.contrib / total * 100) : 0;
+    return `
+      <div>
+        <div class="prod-row">
+          <div class="prod-icon">${r.icon}</div>
+          <div class="prod-name">${r.name} <span style="color: var(--muted-dim)">·${r.owned}</span></div>
+          <div class="prod-pct">${pct.toFixed(0)}%</div>
+        </div>
+        <div class="prod-bar"><div style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
+}
+
 function renderStats() {
   tweenCount(state.count);
   const cpsEl = $('cps');
@@ -1283,6 +1480,7 @@ function renderStats() {
     $('prestigeProgress').style.width = Math.min(100, 100 * state.totalEarned / 1e9) + '%';
   }
   renderAchievements();
+  renderProduction();
 }
 
 $('prestigeBtn').onclick = () => {
@@ -1313,6 +1511,80 @@ function floatText(x, y, text, crit = false) {
   $('center').appendChild(el);
   setTimeout(() => el.remove(), 1000);
 }
+// Token icon flies from click position toward the token counter
+function tokenFly(startX, startY) {
+  const target = $('count').getBoundingClientRect();
+  const tx = target.left + target.width * 0.3 - startX;
+  const ty = target.top + target.height * 0.5 - startY;
+  const el = document.createElement('div');
+  el.className = 'token-fly';
+  el.style.left = startX + 'px';
+  el.style.top = startY + 'px';
+  el.style.setProperty('--dx', tx + 'px');
+  el.style.setProperty('--dy', ty + 'px');
+  el.textContent = '✦';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 750);
+}
+
+// Brief gold flash on the token counter
+function flashCount() {
+  const el = $('count');
+  el.classList.add('flash');
+  clearTimeout(flashCount._t);
+  flashCount._t = setTimeout(() => el.classList.remove('flash'), 90);
+}
+
+// Confetti burst (used for achievements)
+function confetti(x, y) {
+  const colors = ['#d97757', '#f4a07a', '#ffcc33', '#a585ff', '#7ed957', '#f5e6d3'];
+  for (let i = 0; i < 24; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = x + 'px';
+    c.style.top = y + 'px';
+    c.style.background = colors[i % colors.length];
+    const ang = Math.random() * Math.PI - Math.PI / 2;
+    const speed = 80 + Math.random() * 240;
+    c.style.setProperty('--dx', Math.cos(ang) * speed + 'px');
+    c.style.setProperty('--dy', Math.sin(ang) * speed + 200 + 'px');
+    c.style.borderRadius = Math.random() < 0.5 ? '50%' : '2px';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1700);
+  }
+}
+
+// Brief screen shake for crits
+function critShake() {
+  document.body.classList.add('crit');
+  setTimeout(() => document.body.classList.remove('crit'), 250);
+}
+
+// Ambient floating tokens in the center area
+function spawnAmbient() {
+  const layer = $('ambient');
+  if (!layer) return;
+  const rect = layer.getBoundingClientRect();
+  if (rect.width < 100) return;
+  const el = document.createElement('div');
+  el.className = 'ambient-particle';
+  const startX = Math.random() * rect.width;
+  const startY = rect.height + 20;
+  const dy = -(rect.height + 80);
+  const dx = (Math.random() - 0.5) * 100;
+  el.style.left = startX + 'px';
+  el.style.top = startY + 'px';
+  el.style.setProperty('--dx', dx + 'px');
+  el.style.setProperty('--dy', dy + 'px');
+  const choices = ['✦', '✧', '◆', '·', '✸'];
+  el.textContent = choices[Math.floor(Math.random() * choices.length)];
+  el.style.fontSize = (8 + Math.random() * 10) + 'px';
+  el.style.opacity = (0.2 + Math.random() * 0.3);
+  layer.appendChild(el);
+  setTimeout(() => el.remove(), 15_000);
+}
+setInterval(spawnAmbient, 900);
+
 function sparkleBurst(x, y, count = 6) {
   const symbols = ['✦','✧','✨','⭐','◆'];
   for (let i = 0; i < count; i++) {
@@ -1345,6 +1617,8 @@ function checkAchievements() {
     if (!state.achievements[a.id] && a.cond(state)) {
       state.achievements[a.id] = 1;
       showToast(a.icon, 'Achievement', a.name);
+      // confetti burst from the toast position
+      confetti(window.innerWidth / 2, 70);
     }
   }
 }
@@ -1354,13 +1628,18 @@ let comboCount = 0;
 let comboTimer = null;
 function bumpCombo() {
   comboCount++;
+  if (comboCount > state.maxCombo) state.maxCombo = comboCount;
   if (comboCount > 1) {
     const badge = $('comboBadge');
     badge.textContent = `×${comboCount} combo`;
     badge.classList.add('active');
   }
   clearTimeout(comboTimer);
-  comboTimer = setTimeout(() => { comboCount = 0; $('comboBadge').classList.remove('active'); }, 1200);
+  comboTimer = setTimeout(() => {
+    comboCount = 0;
+    $('comboBadge').classList.remove('active');
+    $('mascot').classList.remove('combo-hi');
+  }, 1200);
 }
 function comboBonus() {
   if (comboCount < 10) return 1;
@@ -1384,6 +1663,7 @@ function spawnGolden() {
     state.goldenClicked++;
     if (Math.random() < 0.6) {
       state.frenzyUntil = Date.now() + 15_000;
+      state.frenzyCount = (state.frenzyCount || 0) + 1;
       $('frenzyBanner').classList.add('show');
       document.body.classList.add('frenzy');
       recalcCps();
@@ -1428,6 +1708,12 @@ mascot.addEventListener('click', e => {
   if (crit) { state.count += finalGain - gain; state.totalEarned += finalGain - gain; }
   floatText(x, y, (crit ? '⚡ ' : '+') + fmt(finalGain), crit);
   sparkleBurst(x, y, crit ? 10 : 6);
+  tokenFly(e.clientX, e.clientY);
+  flashCount();
+  if (crit) critShake();
+  // mascot glow intensifies on high combo
+  if (comboCount >= 15) mascot.classList.add('combo-hi');
+  else mascot.classList.remove('combo-hi');
   $('mascotSvg').animate(
     [{ transform: 'scale(1)' }, { transform: 'scale(1.08, 0.92)' }, { transform: 'scale(1)' }],
     { duration: 150 }
@@ -1471,6 +1757,7 @@ function save() {
       goldenClicked: state.goldenClicked, upgrades: state.upgrades, clickUpgrades: state.clickUpgrades,
       achievements: state.achievements, startedAt: state.startedAt,
       vibes: state.vibes, ascensions: state.ascensions, lastSaveTime: state.lastSaveTime,
+      maxCombo: state.maxCombo || 0, frenzyCount: state.frenzyCount || 0,
     }));
   } catch {}
 }
