@@ -797,6 +797,54 @@
   .item.affordable .cost { color: var(--good); }
   .item.affordable .cost .buy-tag { background: rgba(126,217,87,0.15); color: var(--good); }
 
+  /* Boost tab dot indicator (something affordable) */
+  .boost-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--good);
+    margin-left: 6px;
+    vertical-align: middle;
+    box-shadow: 0 0 6px var(--good);
+    animation: pulseDot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* Section sub-headings inside shop */
+  .shop-subhead {
+    font-size: 10px;
+    color: var(--muted-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin: 8px 4px 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .shop-subhead .pill {
+    font-size: 10px;
+    color: var(--accent-glow);
+    background: rgba(217,119,87,0.1);
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+  }
+
+  /* Tier upgrade items get a roman-numeral pip */
+  .item.tier .icon { background: linear-gradient(135deg, #ffcc33, #b88a00); }
+  .item.tier.tier-2 .icon { background: linear-gradient(135deg, #a585ff, #5b3ec0); }
+  .item.tier.tier-3 .icon { background: linear-gradient(135deg, #7ed957, #3a8a2c); }
+  .item.power .icon { background: linear-gradient(135deg, #f4a07a, #d97757); box-shadow: 0 4px 10px rgba(217,119,87,0.4), inset 0 1px 0 rgba(255,255,255,0.15); }
+  .item.owned-marker { opacity: 0.55; }
+  .item.owned-marker .cost { color: var(--good); font-style: italic; }
+
   .shop::-webkit-scrollbar, .stats::-webkit-scrollbar { width: 6px; }
   .shop::-webkit-scrollbar-track, .stats::-webkit-scrollbar-track { background: transparent; }
   .shop::-webkit-scrollbar-thumb, .stats::-webkit-scrollbar-thumb { background: #3a2a20; border-radius: 3px; }
@@ -1050,6 +1098,7 @@
     <div class="tabs">
       <div class="tab active" data-tab="auto">Auto</div>
       <div class="tab" data-tab="click">Click</div>
+      <div class="tab" data-tab="boost">Boost<span class="boost-dot" id="boostDot" style="display:none"></span></div>
     </div>
     <div class="buy-mult" id="buyMult">
       <button data-mult="1" class="active">×1</button>
@@ -1059,6 +1108,7 @@
     </div>
     <div class="shop-section active" id="section-auto"></div>
     <div class="shop-section" id="section-click"></div>
+    <div class="shop-section" id="section-boost"></div>
   </aside>
 </div>
 
@@ -1154,6 +1204,8 @@ const state = {
   lastSaveTime: Date.now(),
   maxCombo: 0,
   frenzyCount: 0,
+  tiers: {},   // tier-upgrade ownership: { 'haiku-1': 1, 'haiku-2': 1, ... }
+  powers: {},  // global power-up ownership: { espresso: 1, lucky: 1, ... }
 };
 let buyMult = 1;
 
@@ -1188,6 +1240,57 @@ const SHOP_CLICK = [
   { id: 'chrono',    name: 'Chrono Gloves',    desc: '+100% click mult per level',  icon: '🧪', baseCost: 25_000_000_000,  multBonus: 1 },
   { id: 'infinity',  name: 'Infinity Click',   desc: '+50,000 per click',           icon: '∞',  baseCost: 500_000_000_000, flat: 50000 },
 ];
+
+// Global power-ups — one-time purchases with permanent buffs
+const SHOP_POWER = [
+  { id: 'comboexpert', name: 'Combo Expert',   desc: 'Combo bonus kicks in at ×5 (was ×10)',          icon: '🎯', cost: 2_000_000 },
+  { id: 'espresso',    name: 'Espresso Shot',  desc: 'Crit chance: 3% → 6%',                          icon: '☕', cost: 5_000_000 },
+  { id: 'lucky',       name: 'Lucky Charm',    desc: 'Golden Claudes spawn 2× more often',            icon: '🍀', cost: 25_000_000 },
+  { id: 'megacrit',    name: 'Mega Crits',     desc: 'Crit multiplier: ×10 → ×25',                    icon: '💥', cost: 120_000_000 },
+  { id: 'longfrenzy',  name: 'Long Frenzy',    desc: 'Frenzy duration: 15s → 30s',                    icon: '⏰', cost: 600_000_000 },
+  { id: 'offlinepro',  name: 'Always Online',  desc: 'Offline progress: 50% → 100%',                  icon: '🌐', cost: 2_500_000_000 },
+  { id: 'powerfrenzy', name: 'Power Frenzy',   desc: 'Frenzy multiplier: ×7 → ×15',                   icon: '🔥', cost: 15_000_000_000 },
+  { id: 'cheapshop',   name: 'Bulk Discount',  desc: 'All upgrade costs −5%',                         icon: '💸', cost: 80_000_000_000 },
+  { id: 'vibedouble',  name: 'Vibe Doubler',   desc: 'Each Vibe gives +2% (was +1%)',                 icon: '🪐', cost: 500_000_000_000 },
+  { id: 'critchain',   name: 'Crit Chain',     desc: 'Crit chance: 6% → 12%',                         icon: '🌪️', cost: 5_000_000_000_000 },
+  { id: 'goldenboost', name: 'Golden Boost',   desc: 'Golden rewards 3× bigger',                      icon: '👑', cost: 25_000_000_000_000 },
+];
+
+// Tier upgrades — generated for each building, unlock at 1/25/100 owned
+// Tier 1: ×2 production at 1+ owned, cost = building base × 10
+// Tier 2: ×2 production at 25+ owned, cost = building base × 200
+// Tier 3: ×4 production at 100+ owned, cost = building base × 5000
+const SHOP_TIERS = (() => {
+  const tiers = [];
+  const tierSpecs = [
+    { t: 1, owned: 1,   mult: 2, costMult: 10,   roman: 'I'  },
+    { t: 2, owned: 25,  mult: 2, costMult: 200,  roman: 'II' },
+    { t: 3, owned: 100, mult: 4, costMult: 5000, roman: 'III'},
+  ];
+  for (const b of SHOP_AUTO) {
+    for (const ts of tierSpecs) {
+      tiers.push({
+        id: `${b.id}-${ts.t}`, buildingId: b.id, isAuto: true,
+        tier: ts.t, unlockOwned: ts.owned, mult: ts.mult,
+        name: `${b.name} ${ts.roman}`,
+        desc: `×${ts.mult} ${b.name} (need ${ts.owned}+)`,
+        icon: b.icon, cost: Math.ceil(b.baseCost * ts.costMult),
+      });
+    }
+  }
+  for (const b of SHOP_CLICK) {
+    for (const ts of tierSpecs) {
+      tiers.push({
+        id: `${b.id}-${ts.t}`, buildingId: b.id, isAuto: false,
+        tier: ts.t, unlockOwned: ts.owned, mult: ts.mult,
+        name: `${b.name} ${ts.roman}`,
+        desc: `×${ts.mult} ${b.name} (need ${ts.owned}+)`,
+        icon: b.icon, cost: Math.ceil(b.baseCost * ts.costMult),
+      });
+    }
+  }
+  return tiers;
+})();
 
 const ACHIEVEMENTS = [
   { id: 'click1',     icon: '👶', name: 'First contact',          cond: s => s.totalClicks >= 1 },
@@ -1249,6 +1352,13 @@ const ACHIEVEMENTS = [
   { id: 'all_late',   icon: '🪬', name: 'Endgame complete',       cond: s => ['timeloop','singularity','deity','omniverse','transcend'].every(k => (s.upgrades[k]||0) > 0) },
   { id: 'frenzy10',   icon: '⚡', name: 'Frenzy fan',             cond: s => (s.frenzyCount || 0) >= 10 },
   { id: 'frenzy50',   icon: '🌩️', name: 'Frenzy addict',          cond: s => (s.frenzyCount || 0) >= 50 },
+  { id: 'tier1',      icon: '🥉', name: 'First upgrade tier',     cond: s => Object.keys(s.tiers || {}).length >= 1 },
+  { id: 'tier10',     icon: '🥈', name: 'Stacking boosts',        cond: s => Object.keys(s.tiers || {}).length >= 10 },
+  { id: 'tier_all',   icon: '🥇', name: 'Maxed out',              cond: s => Object.keys(s.tiers || {}).length >= SHOP_TIERS.length },
+  { id: 'power1',     icon: '🔋', name: 'First power mod',        cond: s => Object.keys(s.powers || {}).length >= 1 },
+  { id: 'power5',     icon: '⚡', name: 'Power user',             cond: s => Object.keys(s.powers || {}).length >= 5 },
+  { id: 'power_all',  icon: '🎛️', name: 'All systems online',     cond: s => Object.keys(s.powers || {}).length >= SHOP_POWER.length },
+  { id: 'tier3any',   icon: '💠', name: 'Tier III!',              cond: s => Object.keys(s.tiers || {}).some(k => k.endsWith('-3')) },
 ];
 
 const NEWS = [
@@ -1280,27 +1390,55 @@ const fmt = n => {
   return n.toFixed(2).replace(/\.?0+$/, '') + units[i];
 };
 
+function hasPower(id) { return !!(state.powers && state.powers[id]); }
+function costFactor() { return hasPower('cheapshop') ? 0.95 : 1; }
+
 function costOf(item, owned) {
-  return Math.ceil(item.baseCost * Math.pow(1.15, owned));
+  return Math.ceil(item.baseCost * costFactor() * Math.pow(1.15, owned));
 }
 function costOfN(item, owned, n) {
-  return Math.ceil(item.baseCost * Math.pow(1.15, owned) * (Math.pow(1.15, n) - 1) / 0.15);
+  return Math.ceil(item.baseCost * costFactor() * Math.pow(1.15, owned) * (Math.pow(1.15, n) - 1) / 0.15);
 }
 function maxBuyable(item, owned, cash) {
-  const k = item.baseCost * Math.pow(1.15, owned) / 0.15;
+  const k = item.baseCost * costFactor() * Math.pow(1.15, owned) / 0.15;
   if (k <= 0) return 0;
   const n = Math.floor(Math.log(cash / k + 1) / Math.log(1.15));
   return Math.max(0, n);
 }
 
-function vibeMult() { return 1 + (state.vibes * 0.01); }
-function frenzyMult() { return Date.now() < state.frenzyUntil ? 7 : 1; }
+// Combined tier-upgrade multiplier for a given building
+function buildingMult(id) {
+  let m = 1;
+  if (state.tiers && state.tiers[`${id}-1`]) m *= 2;
+  if (state.tiers && state.tiers[`${id}-2`]) m *= 2;
+  if (state.tiers && state.tiers[`${id}-3`]) m *= 4;
+  return m;
+}
+
+function vibeMult() {
+  const per = hasPower('vibedouble') ? 0.02 : 0.01;
+  return 1 + ((state.vibes || 0) * per);
+}
+function frenzyActiveMult() { return hasPower('powerfrenzy') ? 15 : 7; }
+function frenzyMult() { return Date.now() < state.frenzyUntil ? frenzyActiveMult() : 1; }
+function frenzyDuration() { return hasPower('longfrenzy') ? 30_000 : 15_000; }
+function critChance() {
+  if (hasPower('critchain')) return 0.12;
+  if (hasPower('espresso')) return 0.06;
+  return 0.03;
+}
+function critMult() { return hasPower('megacrit') ? 25 : 10; }
+function offlineRate() { return hasPower('offlinepro') ? 1 : 0.5; }
+function goldenBonusFactor() { return hasPower('goldenboost') ? 3 : 1; }
+function comboThreshold() { return hasPower('comboexpert') ? 5 : 10; }
+
 function effectiveCpc() { return state.baseCpc * state.clickMult * frenzyMult() * vibeMult(); }
 
 function recalcCps() {
   let cps = 0;
   for (const item of SHOP_AUTO) {
-    cps += (state.upgrades[item.id] || 0) * item.cps;
+    const owned = state.upgrades[item.id] || 0;
+    cps += owned * item.cps * buildingMult(item.id);
   }
   state.cps = cps * frenzyMult() * vibeMult();
 }
@@ -1309,8 +1447,9 @@ function recalcClick() {
   let mult = 1;
   for (const item of SHOP_CLICK) {
     const owned = state.clickUpgrades[item.id] || 0;
-    if (item.flat) flat += item.flat * owned;
-    if (item.multBonus) mult += item.multBonus * owned;
+    const bMult = buildingMult(item.id);
+    if (item.flat) flat += item.flat * owned * bMult;
+    if (item.multBonus) mult += item.multBonus * owned * bMult;
   }
   if (state.cps > 0) mult += Math.log10(1 + state.cps) * 0.02;
   state.baseCpc = flat;
@@ -1370,6 +1509,119 @@ function renderShop() {
       root.appendChild(el);
     }
   }
+  renderBoostSection();
+}
+
+// Boost tab — tier upgrades + global power-ups
+function renderBoostSection() {
+  const root = $('section-boost');
+  if (!root) return;
+  root.innerHTML = '';
+
+  // ---- Tier upgrades ----
+  const availableTiers = SHOP_TIERS.filter(t => {
+    if (state.tiers[t.id]) return true;
+    const ownedMap = t.isAuto ? state.upgrades : state.clickUpgrades;
+    return (ownedMap[t.buildingId] || 0) >= t.unlockOwned;
+  });
+  // sort: not-yet-owned first, sorted by cost; owned last
+  availableTiers.sort((a, b) => {
+    const ao = !!state.tiers[a.id], bo = !!state.tiers[b.id];
+    if (ao !== bo) return ao ? 1 : -1;
+    return a.cost - b.cost;
+  });
+
+  const tierHead = document.createElement('div');
+  tierHead.className = 'shop-subhead';
+  const tierOwnedCount = Object.keys(state.tiers || {}).length;
+  tierHead.innerHTML = `<span>Tier upgrades</span><span class="pill">${tierOwnedCount}/${SHOP_TIERS.length}</span>`;
+  root.appendChild(tierHead);
+
+  if (availableTiers.length === 0) {
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11px; color:var(--muted-dim); padding:6px 4px;';
+    note.textContent = 'Buy your first building to unlock tier upgrades.';
+    root.appendChild(note);
+  }
+
+  for (const t of availableTiers) {
+    const owned = !!state.tiers[t.id];
+    const affordable = state.count >= t.cost && !owned;
+    const el = document.createElement('div');
+    el.className = 'item tier tier-' + t.tier + (owned ? ' owned-marker' : (affordable ? ' affordable' : ''));
+    el.innerHTML = `
+      <div class="icon">${t.icon}</div>
+      <div class="info">
+        <div class="name">${t.name}</div>
+        <div class="desc">${t.desc}</div>
+        <div class="cost">${owned ? '✓ owned' : fmt(Math.ceil(t.cost * costFactor())) + ' tokens'}</div>
+      </div>
+    `;
+    el.onclick = () => {
+      if (owned) return;
+      const c = Math.ceil(t.cost * costFactor());
+      if (state.count < c) {
+        el.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:200});
+        return;
+      }
+      state.count -= c;
+      state.tiers[t.id] = 1;
+      recalcCps(); recalcClick(); renderShop(); renderStats();
+    };
+    root.appendChild(el);
+  }
+
+  // ---- Power-ups ----
+  const powerHead = document.createElement('div');
+  powerHead.className = 'shop-subhead';
+  powerHead.style.marginTop = '10px';
+  const powerOwnedCount = Object.keys(state.powers || {}).length;
+  powerHead.innerHTML = `<span>Power Mods</span><span class="pill">${powerOwnedCount}/${SHOP_POWER.length}</span>`;
+  root.appendChild(powerHead);
+
+  // sort: not-owned by cost ascending, owned last
+  const sortedPowers = [...SHOP_POWER].sort((a, b) => {
+    const ao = !!state.powers[a.id], bo = !!state.powers[b.id];
+    if (ao !== bo) return ao ? 1 : -1;
+    return a.cost - b.cost;
+  });
+
+  for (const p of sortedPowers) {
+    const owned = !!state.powers[p.id];
+    const unlocked = state.totalEarned >= p.cost * 0.3 || owned;
+    const affordable = state.count >= p.cost && !owned;
+    const el = document.createElement('div');
+    el.className = 'item power' + (owned ? ' owned-marker' : (affordable ? ' affordable' : '')) + (!unlocked ? ' locked' : '');
+    const showName = unlocked ? p.name : '???';
+    const showDesc = unlocked ? p.desc : `unlocks at ${fmt(p.cost * 0.3)} all-time`;
+    el.innerHTML = `
+      <div class="icon">${unlocked ? p.icon : '🔒'}</div>
+      <div class="info">
+        <div class="name">${showName}</div>
+        <div class="desc">${showDesc}</div>
+        <div class="cost">${owned ? '✓ owned' : fmt(Math.ceil(p.cost * costFactor())) + ' tokens'}</div>
+      </div>
+    `;
+    el.onclick = () => {
+      if (owned || !unlocked) return;
+      const c = Math.ceil(p.cost * costFactor());
+      if (state.count < c) {
+        el.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:200});
+        return;
+      }
+      state.count -= c;
+      state.powers[p.id] = 1;
+      recalcCps(); recalcClick(); renderShop(); renderStats();
+      showToast(p.icon, 'Power unlocked', p.name);
+    };
+    root.appendChild(el);
+  }
+
+  // Update boost-dot indicator on the tab
+  const anyAffordableBoost =
+    availableTiers.some(t => !state.tiers[t.id] && state.count >= Math.ceil(t.cost * costFactor())) ||
+    sortedPowers.some(p => !state.powers[p.id] && state.count >= Math.ceil(p.cost * costFactor()));
+  $('boostDot').style.display = anyAffordableBoost ? 'inline-block' : 'none';
 }
 document.querySelectorAll('#buyMult button').forEach(b => {
   b.onclick = () => {
@@ -1494,8 +1746,10 @@ $('prestigeBtn').onclick = () => {
   state.totalClicks = 0;
   state.upgrades = {};
   state.clickUpgrades = {};
+  state.tiers = {};
   state.frenzyUntil = 0;
   state.startedAt = Date.now();
+  // powers persist across ascension — they're permanent late-game purchases
   recalcCps(); recalcClick(); renderShop(); renderStats();
   showToast('🪐', 'Ascended', `+${fmt(pending)} Vibes`);
   save();
@@ -1642,8 +1896,9 @@ function bumpCombo() {
   }, 1200);
 }
 function comboBonus() {
-  if (comboCount < 10) return 1;
-  return 1 + Math.min(0.5, (comboCount - 10) * 0.02);
+  const t = comboThreshold();
+  if (comboCount < t) return 1;
+  return 1 + Math.min(0.5, (comboCount - t) * 0.02);
 }
 
 /* ============================== Golden Claude ============================== */
@@ -1662,19 +1917,21 @@ function spawnGolden() {
     e.stopPropagation();
     state.goldenClicked++;
     if (Math.random() < 0.6) {
-      state.frenzyUntil = Date.now() + 15_000;
+      const dur = frenzyDuration();
+      state.frenzyUntil = Date.now() + dur;
       state.frenzyCount = (state.frenzyCount || 0) + 1;
+      $('frenzyBanner').textContent = `⚡ FRENZY · ×${frenzyActiveMult()} tokens! ⚡`;
       $('frenzyBanner').classList.add('show');
       document.body.classList.add('frenzy');
       recalcCps();
-      showToast('⚡', 'Golden Claude', 'Frenzy! ×7 for 15s');
+      showToast('⚡', 'Golden Claude', `Frenzy! ×${frenzyActiveMult()} for ${dur/1000}s`);
       setTimeout(() => {
         $('frenzyBanner').classList.remove('show');
         document.body.classList.remove('frenzy');
         recalcCps();
-      }, 15_000);
+      }, dur);
     } else {
-      const bonus = Math.max(13, state.cps * 60 + state.count * 0.1);
+      const bonus = Math.max(13, state.cps * 60 + state.count * 0.1) * goldenBonusFactor();
       state.count += bonus;
       state.totalEarned += bonus;
       const cr = center.getBoundingClientRect();
@@ -1688,7 +1945,8 @@ function spawnGolden() {
   setTimeout(() => svg.remove(), 12_000);
 }
 function scheduleGolden() {
-  const next = 60_000 + Math.random() * 120_000;
+  let next = 60_000 + Math.random() * 120_000;
+  if (hasPower('lucky')) next /= 2;
   setTimeout(() => { spawnGolden(); scheduleGolden(); }, next);
 }
 
@@ -1703,8 +1961,8 @@ mascot.addEventListener('click', e => {
   const rect = $('center').getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
-  const crit = Math.random() < 0.03;
-  const finalGain = crit ? gain * 10 : gain;
+  const crit = Math.random() < critChance();
+  const finalGain = crit ? gain * critMult() : gain;
   if (crit) { state.count += finalGain - gain; state.totalEarned += finalGain - gain; }
   floatText(x, y, (crit ? '⚡ ' : '+') + fmt(finalGain), crit);
   sparkleBurst(x, y, crit ? 10 : 6);
@@ -1758,6 +2016,7 @@ function save() {
       achievements: state.achievements, startedAt: state.startedAt,
       vibes: state.vibes, ascensions: state.ascensions, lastSaveTime: state.lastSaveTime,
       maxCombo: state.maxCombo || 0, frenzyCount: state.frenzyCount || 0,
+      tiers: state.tiers || {}, powers: state.powers || {},
     }));
   } catch {}
 }
@@ -1772,14 +2031,18 @@ function load() {
     if (!state.achievements) state.achievements = {};
     if (!state.startedAt) state.startedAt = Date.now();
     if (!state.vibes) state.vibes = 0;
+    if (!state.tiers) state.tiers = {};
+    if (!state.powers) state.powers = {};
 
     if (state.lastSaveTime) {
       const away = Math.min(8 * 3600_000, Date.now() - state.lastSaveTime);
       if (away > 10_000) {
         let baseCps = 0;
-        for (const item of SHOP_AUTO) baseCps += (state.upgrades[item.id] || 0) * item.cps;
+        for (const item of SHOP_AUTO) {
+          baseCps += (state.upgrades[item.id] || 0) * item.cps * buildingMult(item.id);
+        }
         baseCps *= vibeMult();
-        const earned = baseCps * (away / 1000) * 0.5;
+        const earned = baseCps * (away / 1000) * offlineRate();
         if (earned > 0) {
           state.count += earned;
           state.totalEarned += earned;
