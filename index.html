@@ -369,7 +369,7 @@
     z-index: 2;
     animation: idleBob 3s ease-in-out infinite;
   }
-  .mascot-wrap:active { transform: scale(0.94) translateY(2px); animation: none; }
+  .mascot-wrap:active { transform: scale(0.985); animation: none; }
   .mascot-wrap::before {
     content: "";
     position: absolute;
@@ -2286,10 +2286,24 @@ function doClick(clientX, clientY) {
   if (crit) critShake();
   if (comboCount >= 15) mascot.classList.add('combo-hi');
   else mascot.classList.remove('combo-hi');
+  // gentle press — soft uniform dip and smooth return, no squash/stretch
+  // distortion and no springy overshoot, so rapid clicks stay calm
   const frames = crit
-    ? [{ transform: 'scale(1)' }, { transform: 'scale(1.25, 0.78)' }, { transform: 'scale(0.92, 1.12)' }, { transform: 'scale(1)' }]
-    : [{ transform: 'scale(1)' }, { transform: 'scale(1.14, 0.88)' }, { transform: 'scale(0.97, 1.05)' }, { transform: 'scale(1)' }];
-  $('mascotSvg').animate(frames, { duration: crit ? 280 : 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+    ? [
+        { transform: 'scale(1)' },
+        { transform: 'scale(0.93)', offset: 0.35 },
+        { transform: 'scale(1.03)', offset: 0.68 },
+        { transform: 'scale(1)' },
+      ]
+    : [
+        { transform: 'scale(1)' },
+        { transform: 'scale(0.96)', offset: 0.45 },
+        { transform: 'scale(1)' },
+      ];
+  $('mascotSvg').animate(frames, {
+    duration: crit ? 240 : 130,
+    easing: 'cubic-bezier(0.33, 0, 0.25, 1)',
+  });
   renderStats();
   renderShop();
 }
