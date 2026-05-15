@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#14100d" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
 <title>Claude Clicker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1014,20 +1017,165 @@
   }
   .modal button:hover { background: var(--accent-glow); }
 
-  @media (max-width: 900px) {
-    html, body { overflow: auto; }
-    .app { grid-template-columns: 1fr; grid-template-rows: 32px auto auto auto; height: auto; }
-    .stats, .shop { border: none; }
-    .center { min-height: 70vh; padding: 40px 0; }
-    .title { position: static; padding: 0 20px 24px; }
-    .mascot { width: 240px; height: 240px; }
-    .combo-badge { top: 12px; right: 12px; }
+  /* ===================== Mobile header + bottom nav ===================== */
+  .mobile-header, .mobile-nav { display: none; }
+
+  .mobile-header {
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border-bottom: 1px solid var(--panel-border);
+    gap: 12px;
+  }
+  .mobile-header .mh-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+  .mobile-header .mh-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .mobile-header .mh-sub strong { color: var(--accent-glow); font-family: 'JetBrains Mono', monospace; }
+  .mobile-header .mh-brand {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 13px;
+  }
+  .mobile-header .mh-right { display: flex; gap: 8px; align-items: center; }
+  .mh-icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--panel-border);
+    display: grid; place-items: center;
+    font-size: 17px; cursor: pointer; color: var(--cream);
+  }
+
+  .mobile-nav {
+    grid-column: 1 / -1;
+    align-items: stretch;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel-3));
+    border-top: 1px solid var(--panel-border-strong);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .mobile-nav button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted-dim);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 0 10px;
+    position: relative;
+    transition: color 0.15s;
+  }
+  .mobile-nav button .nav-ico { font-size: 21px; line-height: 1; }
+  .mobile-nav button.active { color: var(--accent-glow); }
+  .mobile-nav button.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 32px; height: 3px;
+    background: var(--accent);
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .mobile-nav button .nav-dot {
+    position: absolute;
+    top: 8px;
+    margin-left: 22px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 6px var(--good);
+    display: none;
+  }
+
+  /* ===================== Mobile layout ===================== */
+  @media (max-width: 860px) {
+    html, body { overflow: hidden; height: 100%; }
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 26px auto minmax(0, 1fr) 60px;
+      height: 100dvh;
+    }
+    .mobile-header { display: flex; }
+    .mobile-nav { display: flex; }
+
+    /* panels all live in row 3, only the active one shows */
+    .stats, .center, .shop {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      border: none !important;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .stats, .center, .shop { display: none; }
+    body.mv-play  .center { display: flex; }
+    body.mv-shop  .shop   { display: flex; }
+    body.mv-stats .stats  { display: flex; }
+
+    /* desktop-only chrome hidden on mobile */
+    .stats .brand,
+    .stats .count-block { display: none; }
+    .sound-toggle { display: none; }
+
+    /* center / play view */
+    .center { padding: 10px 0 20px; justify-content: center; }
+    .title { position: static; padding: 14px 20px 6px; font-size: 19px; }
+    .title small { font-size: 9px; letter-spacing: 2px; }
+    .mascot { width: min(64vw, 280px); height: min(64vw, 280px); }
+    .combo-badge { top: 14px; right: 14px; }
+    .live-stats { bottom: 16px; }
+    .click-hint { display: none; }
+    .pedestal { width: 60vw; }
+
+    /* shop fills width */
+    .shop { padding: 14px 14px 24px; gap: 8px; }
+    .item { padding: 13px 13px; }
+    .item .icon { width: 46px; height: 46px; font-size: 24px; }
+    .buy-mult button { padding: 9px 4px; }
+    .tab { padding: 11px 6px; }
+
+    /* stats view */
+    .stats { padding: 16px 16px 28px; }
+  }
+
+  @media (max-width: 380px) {
+    .mobile-header .mh-count { font-size: 22px; }
+    .mascot { width: 70vw; height: 70vw; }
   }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="ticker"><div class="ticker-track" id="ticker"></div></div>
+
+  <header class="mobile-header">
+    <div>
+      <div class="mh-count num" id="mhCount">0</div>
+      <div class="mh-sub"><strong id="mhCps">0</strong>/s · <strong id="mhCpc">1</strong>/click</div>
+    </div>
+    <div class="mh-right">
+      <button class="mh-icon-btn" id="mhSound" title="Sound">🔊</button>
+    </div>
+  </header>
 
   <aside class="stats">
     <div class="brand">
@@ -1148,6 +1296,12 @@
     <div class="shop-section" id="section-click"></div>
     <div class="shop-section" id="section-boost"></div>
   </aside>
+
+  <nav class="mobile-nav" id="mobileNav">
+    <button data-view="play" class="active"><span class="nav-ico">🎮</span>Play</button>
+    <button data-view="shop"><span class="nav-dot" id="navDotShop"></span><span class="nav-ico">🛒</span>Upgrades</button>
+    <button data-view="stats"><span class="nav-ico">📊</span>Stats</button>
+  </nav>
 </div>
 
 <div class="toast" id="toast">
@@ -1764,11 +1918,13 @@ function renderBoostSection() {
     root.appendChild(el);
   }
 
-  // Update boost-dot indicator on the tab
+  // Update boost-dot indicator on the tab + mobile nav
   const anyAffordableBoost =
     availableTiers.some(t => !state.tiers[t.id] && state.count >= Math.ceil(t.cost * costFactor())) ||
     sortedPowers.some(p => !state.powers[p.id] && state.count >= Math.ceil(p.cost * costFactor()));
   $('boostDot').style.display = anyAffordableBoost ? 'inline-block' : 'none';
+  const navDot = $('navDotShop');
+  if (navDot) navDot.style.display = anyAffordableBoost ? 'block' : 'none';
 }
 document.querySelectorAll('#buyMult button').forEach(b => {
   b.onclick = () => {
@@ -1807,7 +1963,9 @@ function tweenCount(target) {
   } else {
     displayedCount += diff * 0.25;
   }
-  $('count').textContent = fmt(displayedCount);
+  const txt = fmt(displayedCount);
+  $('count').textContent = txt;
+  $('mhCount').textContent = txt;
 }
 
 function renderProduction() {
@@ -1860,6 +2018,8 @@ function renderStats() {
   $('totalEarned').textContent = fmt(state.totalEarned);
   $('liveCpc').textContent = fmt(effectiveCpc());
   $('liveCps').textContent = fmt(state.cps);
+  $('mhCps').textContent = fmt(state.cps);
+  $('mhCpc').textContent = fmt(effectiveCpc());
   $('vibeCount').textContent = fmt(state.vibes);
   $('vibeBoost').textContent = state.vibes.toLocaleString();
   $('ascensionsPill').textContent = (state.ascensions || 0) + ' lifetime' + ((state.ascensions||0) === 1 ? '' : 's');
@@ -2102,38 +2262,46 @@ function scheduleGolden() {
 
 /* ============================== Mascot click ============================== */
 const mascot = $('mascot');
-mascot.addEventListener('click', e => {
+
+// Core click logic — clientX/clientY are viewport coords of the tap/click
+function doClick(clientX, clientY) {
   bumpCombo();
   const gain = effectiveCpc() * comboBonus();
   state.count += gain;
   state.totalEarned += gain;
   state.totalClicks++;
   const rect = $('center').getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
   const crit = Math.random() < critChance();
   const finalGain = crit ? gain * critMult() : gain;
   if (crit) { state.count += finalGain - gain; state.totalEarned += finalGain - gain; }
   floatText(x, y, (crit ? '⚡ ' : '+') + fmt(finalGain), crit);
   sparkleBurst(x, y, crit ? 10 : 6);
-  tokenFly(e.clientX, e.clientY);
+  tokenFly(clientX, clientY);
   flashCount();
   spawnRipple(x, y, crit);
-  // SOUND
   if (crit) playCrit();
   else playClick(comboCount);
   if (crit) critShake();
-  // mascot glow intensifies on high combo
   if (comboCount >= 15) mascot.classList.add('combo-hi');
   else mascot.classList.remove('combo-hi');
-  // beefier squash, with extra bounce on crit
   const frames = crit
     ? [{ transform: 'scale(1)' }, { transform: 'scale(1.25, 0.78)' }, { transform: 'scale(0.92, 1.12)' }, { transform: 'scale(1)' }]
     : [{ transform: 'scale(1)' }, { transform: 'scale(1.14, 0.88)' }, { transform: 'scale(0.97, 1.05)' }, { transform: 'scale(1)' }];
   $('mascotSvg').animate(frames, { duration: crit ? 280 : 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
   renderStats();
   renderShop();
-});
+}
+
+// pointerdown fires instantly on touch + mouse (no 300ms tap delay)
+mascot.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  doClick(e.clientX, e.clientY);
+}, { passive: false });
+// stop the browser turning a long-press / drag into a selection or context menu
+mascot.addEventListener('contextmenu', e => e.preventDefault());
+mascot.style.touchAction = 'manipulation';
 
 // Ripple expanding ring at click point
 function spawnRipple(x, y, crit) {
@@ -2145,20 +2313,38 @@ function spawnRipple(x, y, crit) {
   setTimeout(() => el.remove(), 600);
 }
 
-// Sound toggle button
+// Sound toggle (desktop button + mobile header button both call this)
 const soundBtn = $('soundToggle');
 function refreshSoundBtn() {
-  soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+  const icon = soundEnabled ? '🔊' : '🔇';
+  soundBtn.textContent = icon;
   soundBtn.classList.toggle('muted', !soundEnabled);
   soundBtn.title = soundEnabled ? 'Mute (S)' : 'Unmute (S)';
+  const mh = $('mhSound');
+  if (mh) mh.textContent = icon;
 }
-soundBtn.onclick = () => {
+function toggleSound() {
   soundEnabled = !soundEnabled;
   localStorage.setItem('cc-sound', soundEnabled ? 'on' : 'off');
   refreshSoundBtn();
   if (soundEnabled) playClick(0);
-};
+}
+soundBtn.onclick = toggleSound;
+$('mhSound').onclick = toggleSound;
 refreshSoundBtn();
+
+/* ============================== Mobile view switching ============================== */
+function setMobileView(v) {
+  document.body.classList.remove('mv-play', 'mv-shop', 'mv-stats');
+  document.body.classList.add('mv-' + v);
+  document.querySelectorAll('#mobileNav button').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === v);
+  });
+}
+document.querySelectorAll('#mobileNav button').forEach(b => {
+  b.onclick = () => setMobileView(b.dataset.view);
+});
+setMobileView('play');
 
 /* ============================== Keyboard ============================== */
 window.addEventListener('keydown', e => {
@@ -2172,9 +2358,8 @@ window.addEventListener('keydown', e => {
     $('soundToggle').click();
   } else if (e.key === ' ' || e.key === 'Enter') {
     e.preventDefault();
-    const m = document.getElementById('mascot');
-    const r = m.getBoundingClientRect();
-    m.dispatchEvent(new MouseEvent('click', {bubbles:true, clientX: r.left + r.width/2, clientY: r.top + r.height/2}));
+    const r = mascot.getBoundingClientRect();
+    doClick(r.left + r.width / 2, r.top + r.height / 2);
   }
 });
 
