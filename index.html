@@ -505,7 +505,7 @@
   /* Sound toggle button */
   .sound-toggle {
     position: absolute;
-    top: 16px;
+    top: 56px;
     right: 16px;
     width: 36px; height: 36px;
     border-radius: 10px;
@@ -1017,6 +1017,93 @@
   }
   .modal button:hover { background: var(--accent-glow); }
 
+  /* Save-confirmation flash */
+  .save-flash {
+    position: fixed;
+    bottom: 12px; left: 12px;
+    background: rgba(10, 8, 6, 0.85);
+    color: var(--good);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(126, 217, 87, 0.3);
+    opacity: 0;
+    transition: opacity 0.35s;
+    z-index: 900;
+    pointer-events: none;
+  }
+  .save-flash.show { opacity: 0.92; }
+
+  /* Admin console — secret top-right corner hotspot */
+  .admin-hotspot {
+    position: fixed;
+    top: 0; right: 0;
+    width: 46px; height: 46px;
+    z-index: 3000;
+    cursor: default;
+  }
+  .admin-panel {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    backdrop-filter: blur(8px);
+    z-index: 4000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .admin-panel.show { display: flex; }
+  .admin-card {
+    background: linear-gradient(180deg, #2a1f17, #16100b);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 22px;
+    width: 360px;
+    max-width: 100%;
+    max-height: 86vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.7);
+    animation: modalIn 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  .admin-card h2 {
+    font-size: 17px;
+    color: var(--gold);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 2px;
+  }
+  .admin-card .admin-sub {
+    font-size: 11px; color: var(--muted-dim); margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .admin-btn {
+    background: rgba(217,119,87,0.12);
+    border: 1px solid rgba(217,119,87,0.28);
+    color: var(--cream);
+    padding: 11px 8px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.12s;
+  }
+  .admin-btn:hover { background: rgba(217,119,87,0.26); transform: translateY(-1px); }
+  .admin-btn:active { transform: translateY(0); }
+  .admin-btn.wide { grid-column: 1 / -1; }
+  .admin-btn.gold { background: rgba(255,204,51,0.14); border-color: rgba(255,204,51,0.4); color: var(--gold); }
+  .admin-btn.gold:hover { background: rgba(255,204,51,0.26); }
+  .admin-btn.danger { background: rgba(255,107,107,0.12); border-color: rgba(255,107,107,0.32); color: #ff8b7b; }
+  .admin-btn.danger:hover { background: rgba(255,107,107,0.24); }
+  .admin-sep {
+    grid-column: 1 / -1;
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted-dim); font-weight: 700;
+    margin: 8px 2px 0;
+  }
+
   /* ===================== Mobile header + bottom nav ===================== */
   .mobile-header, .mobile-nav { display: none; }
 
@@ -1322,6 +1409,36 @@
     <div class="award" id="awayAward">0</div>
     <div class="away-time">tokens at 50% offline rate</div>
     <button onclick="document.getElementById('welcomeBack').classList.remove('show')">Sweet</button>
+  </div>
+</div>
+
+<div class="save-flash" id="saveFlash">✓ saved</div>
+
+<!-- Secret admin hotspot: tap the very top-right corner -->
+<div class="admin-hotspot" id="adminHotspot"></div>
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-card">
+    <h2>⚡ Admin Console</h2>
+    <div class="admin-sub">god mode — go wild</div>
+    <div class="admin-grid">
+      <div class="admin-sep">Tokens</div>
+      <button class="admin-btn" data-act="add1m">+1M</button>
+      <button class="admin-btn" data-act="add1b">+1B</button>
+      <button class="admin-btn" data-act="add1t">+1T</button>
+      <button class="admin-btn" data-act="add1qa">+1Qa</button>
+      <button class="admin-btn" data-act="x1000">×1000 current</button>
+      <button class="admin-btn gold" data-act="vault">Fill the vault</button>
+      <div class="admin-sep">Upgrades</div>
+      <button class="admin-btn wide" data-act="allauto">Max all Auto buildings</button>
+      <button class="admin-btn wide" data-act="allclick">Max all Click upgrades</button>
+      <button class="admin-btn wide" data-act="alltiers">Unlock all Tier upgrades</button>
+      <button class="admin-btn wide" data-act="allpowers">Unlock all Power mods</button>
+      <div class="admin-sep">Meta</div>
+      <button class="admin-btn gold wide" data-act="allach">Grant all Achievements</button>
+      <button class="admin-btn" data-act="vibes">+1000 Vibes</button>
+      <button class="admin-btn danger" data-act="wipe">Wipe save</button>
+      <button class="admin-btn wide" data-act="close">Close</button>
+    </div>
   </div>
 </div>
 
@@ -2360,6 +2477,81 @@ document.querySelectorAll('#mobileNav button').forEach(b => {
 });
 setMobileView('play');
 
+/* ============================== Admin console ============================== */
+const ADMIN_PW = '0505';
+let adminUnlocked = false;
+
+$('adminHotspot').addEventListener('click', () => {
+  if (adminUnlocked) {
+    $('adminPanel').classList.add('show');
+    return;
+  }
+  const pw = prompt('Enter admin password:');
+  if (pw === null) return;
+  if (pw.trim() === ADMIN_PW) {
+    adminUnlocked = true;
+    $('adminPanel').classList.add('show');
+    showToast('⚡', 'Admin', 'God mode unlocked');
+  } else {
+    showToast('🔒', 'Denied', 'Wrong password');
+  }
+});
+
+function adminAction(act) {
+  switch (act) {
+    case 'add1m':  state.count += 1e6;  state.totalEarned += 1e6;  break;
+    case 'add1b':  state.count += 1e9;  state.totalEarned += 1e9;  break;
+    case 'add1t':  state.count += 1e12; state.totalEarned += 1e12; break;
+    case 'add1qa': state.count += 1e15; state.totalEarned += 1e15; break;
+    case 'x1000': {
+      const add = state.count * 999;
+      state.count += add; state.totalEarned += add;
+      break;
+    }
+    case 'vault':
+      state.count = 1e30;
+      state.totalEarned = Math.max(state.totalEarned, 1e30);
+      break;
+    case 'allauto':
+      SHOP_AUTO.forEach(b => { state.upgrades[b.id] = Math.max(state.upgrades[b.id] || 0, 300); });
+      break;
+    case 'allclick':
+      SHOP_CLICK.forEach(b => { state.clickUpgrades[b.id] = Math.max(state.clickUpgrades[b.id] || 0, 300); });
+      break;
+    case 'alltiers':
+      SHOP_TIERS.forEach(t => { state.tiers[t.id] = 1; });
+      break;
+    case 'allpowers':
+      SHOP_POWER.forEach(p => { state.powers[p.id] = 1; });
+      break;
+    case 'allach':
+      ACHIEVEMENTS.forEach(a => { state.achievements[a.id] = 1; });
+      break;
+    case 'vibes':
+      state.vibes = (state.vibes || 0) + 1000;
+      break;
+    case 'wipe':
+      if (confirm('Wipe the entire save? This cannot be undone.')) {
+        localStorage.removeItem(SAVE_KEY);
+        location.reload();
+      }
+      return;
+    case 'close':
+      $('adminPanel').classList.remove('show');
+      return;
+  }
+  recalcCps(); recalcClick(); renderShop(); renderStats();
+  save();
+  showToast('⚡', 'Admin', 'Done');
+}
+$('adminPanel').querySelectorAll('.admin-btn').forEach(b => {
+  b.onclick = () => adminAction(b.dataset.act);
+});
+// click the dark backdrop to close
+$('adminPanel').addEventListener('click', e => {
+  if (e.target === $('adminPanel')) $('adminPanel').classList.remove('show');
+});
+
 /* ============================== Keyboard ============================== */
 window.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
@@ -2388,7 +2580,16 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 /* ============================== Save / Load ============================== */
-function save() {
+let saveFlashTimer = null;
+function flashSaved() {
+  const el = $('saveFlash');
+  if (!el) return;
+  el.classList.add('show');
+  clearTimeout(saveFlashTimer);
+  saveFlashTimer = setTimeout(() => el.classList.remove('show'), 1000);
+}
+
+function save(silent) {
   try {
     state.lastSaveTime = Date.now();
     localStorage.setItem(SAVE_KEY, JSON.stringify({
@@ -2399,7 +2600,16 @@ function save() {
       maxCombo: state.maxCombo || 0, frenzyCount: state.frenzyCount || 0,
       tiers: state.tiers || {}, powers: state.powers || {},
     }));
-  } catch {}
+    // verify it actually persisted (catches private-mode / quota failures)
+    if (localStorage.getItem(SAVE_KEY) && !silent) flashSaved();
+    return true;
+  } catch (err) {
+    if (!silent) {
+      const el = $('saveFlash');
+      if (el) { el.textContent = '⚠ save blocked'; el.style.color = '#ff8b7b'; el.style.borderColor = 'rgba(255,107,107,0.4)'; flashSaved(); }
+    }
+    return false;
+  }
 }
 function load() {
   try {
@@ -2483,9 +2693,18 @@ renderShop();
 renderStats();
 scheduleGolden();
 setInterval(renderShop, 500);
-setInterval(save, 5_000);
+setInterval(() => save(true), 5_000);   // silent autosave every 5s
 setInterval(renderTicker, 90_000);
-window.addEventListener('beforeunload', save);
+
+// Reliable persistence — beforeunload is unreliable on mobile, so also
+// save on visibility loss and pagehide (both fire when backgrounding a
+// tab / closing the app on iOS + Android).
+window.addEventListener('beforeunload', () => save(true));
+window.addEventListener('pagehide', () => save(true));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) save(true);
+});
+
 requestAnimationFrame(tick);
 </script>
 </body>
