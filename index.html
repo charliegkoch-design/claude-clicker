@@ -1601,12 +1601,8 @@ function playFrenzy() {
 
 /* ============================== Game state ============================== */
 const SAVE_KEY = 'claude-clicker-save-v4';
-// Clean up orphaned saves from previous versions (the v4 bump above wipes
-// every existing player's progress as part of this update).
-try {
-  localStorage.removeItem('claude-clicker-save-v3');
-  localStorage.removeItem('claude-clicker-save-v2');
-} catch {}
+// Legacy keys are tried as fallback on load so old saves migrate forward.
+const LEGACY_SAVE_KEYS = ['claude-clicker-save-v3', 'claude-clicker-save-v2'];
 const state = {
   count: 0,
   totalEarned: 0,
@@ -2619,7 +2615,15 @@ function save(silent) {
 }
 function load() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    // Prefer current save; fall back to any legacy version so old players
+    // don't lose progress across save-format bumps.
+    let raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      for (const k of LEGACY_SAVE_KEYS) {
+        const candidate = localStorage.getItem(k);
+        if (candidate) { raw = candidate; break; }
+      }
+    }
     if (!raw) return;
     const d = JSON.parse(raw);
     Object.assign(state, d);
