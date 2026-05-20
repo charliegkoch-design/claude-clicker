@@ -2481,19 +2481,14 @@ setMobileView('play');
 
 /* ============================== Admin console ============================== */
 const ADMIN_PW = '5555';
-let adminUnlocked = false;
 
+// Password must be re-entered every time the admin panel is opened —
+// no session caching, no remembered unlock.
 $('adminHotspot').addEventListener('click', () => {
-  if (adminUnlocked) {
-    $('adminPanel').classList.add('show');
-    return;
-  }
   const pw = prompt('Enter admin password:');
   if (pw === null) return;
   if (pw.trim() === ADMIN_PW) {
-    adminUnlocked = true;
     $('adminPanel').classList.add('show');
-    showToast('⚡', 'Admin', 'God mode unlocked');
   } else {
     showToast('🔒', 'Denied', 'Wrong password');
   }
