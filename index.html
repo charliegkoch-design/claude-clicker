@@ -2529,8 +2529,7 @@ function adminAction(act) {
       break;
     case 'wipe':
       if (confirm('Wipe the entire save? This cannot be undone.')) {
-        localStorage.removeItem(SAVE_KEY);
-        location.reload();
+        hardReset();
       }
       return;
     case 'close':
@@ -2577,6 +2576,19 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 /* ============================== Save / Load ============================== */
+// When set, all save calls bail out — used during a hard reset so the
+// pagehide/beforeunload handlers don't re-write the in-memory state back
+// to localStorage between the removeItem and the reload.
+let wipingSave = false;
+function hardReset() {
+  wipingSave = true;
+  try {
+    localStorage.removeItem(SAVE_KEY);
+    for (const k of LEGACY_SAVE_KEYS) localStorage.removeItem(k);
+  } catch {}
+  location.reload();
+}
+
 let saveFlashTimer = null;
 function flashSaved() {
   const el = $('saveFlash');
@@ -2587,6 +2599,7 @@ function flashSaved() {
 }
 
 function save(silent) {
+  if (wipingSave) return false;
   try {
     state.lastSaveTime = Date.now();
     localStorage.setItem(SAVE_KEY, JSON.stringify({
@@ -2661,9 +2674,8 @@ function showWelcomeBack(awayMs, earned) {
 }
 
 $('resetBtn').onclick = () => {
-  if (confirm('Hard reset all progress?')) {
-    localStorage.removeItem(SAVE_KEY);
-    location.reload();
+  if (confirm('Hard reset all progress? This wipes your save permanently.')) {
+    hardReset();
   }
 };
 
