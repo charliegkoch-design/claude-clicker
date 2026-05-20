@@ -1600,7 +1600,13 @@ function playFrenzy() {
 }
 
 /* ============================== Game state ============================== */
-const SAVE_KEY = 'claude-clicker-save-v3';
+const SAVE_KEY = 'claude-clicker-save-v4';
+// Clean up orphaned saves from previous versions (the v4 bump above wipes
+// every existing player's progress as part of this update).
+try {
+  localStorage.removeItem('claude-clicker-save-v3');
+  localStorage.removeItem('claude-clicker-save-v2');
+} catch {}
 const state = {
   count: 0,
   totalEarned: 0,
@@ -2478,7 +2484,7 @@ document.querySelectorAll('#mobileNav button').forEach(b => {
 setMobileView('play');
 
 /* ============================== Admin console ============================== */
-const ADMIN_PW = '0505';
+const ADMIN_PW = '5555';
 let adminUnlocked = false;
 
 $('adminHotspot').addEventListener('click', () => {
