@@ -1103,6 +1103,56 @@
     color: var(--muted-dim); font-weight: 700;
     margin: 8px 2px 0;
   }
+  .admin-ach-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    gap: 4px;
+    max-height: 168px;
+    overflow-y: auto;
+    padding: 6px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .admin-ach-chip {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.05);
+    display: grid; place-items: center;
+    font-size: 15px;
+    cursor: pointer;
+    opacity: 0.38;
+    position: relative;
+    transition: all 0.12s;
+  }
+  .admin-ach-chip:hover { opacity: 0.85; }
+  .admin-ach-chip.earned {
+    opacity: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-color: var(--accent-glow);
+  }
+  .admin-ach-chip:hover::after {
+    content: attr(data-name);
+    position: absolute;
+    bottom: 116%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f0a07;
+    color: var(--cream);
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-size: 10px;
+    white-space: nowrap;
+    z-index: 100;
+    border: 1px solid var(--panel-border-strong);
+    pointer-events: none;
+  }
+  .admin-hint {
+    grid-column: 1 / -1;
+    font-size: 10px; color: var(--muted-dim); margin: -2px 2px 2px;
+  }
 
   /* ===================== Mobile header + bottom nav ===================== */
   .mobile-header, .mobile-nav { display: none; }
@@ -1437,6 +1487,9 @@
       <button class="admin-btn gold wide" data-act="allach">Grant all Achievements</button>
       <button class="admin-btn" data-act="vibes">+1000 Vibes</button>
       <button class="admin-btn danger" data-act="wipe">Wipe save</button>
+      <div class="admin-sep">Grant specific achievement</div>
+      <div class="admin-hint">Tap to toggle — earned ones are highlighted. Hover for name.</div>
+      <div class="admin-ach-grid" id="adminAchGrid"></div>
       <button class="admin-btn wide" data-act="close">Close</button>
     </div>
   </div>
@@ -2480,7 +2533,7 @@ document.querySelectorAll('#mobileNav button').forEach(b => {
 setMobileView('play');
 
 /* ============================== Admin console ============================== */
-const ADMIN_PW = '5555';
+const ADMIN_PW = '2345';
 
 // Password must be re-entered every time the admin panel is opened —
 // no session caching, no remembered unlock.
@@ -2488,11 +2541,34 @@ $('adminHotspot').addEventListener('click', () => {
   const pw = prompt('Enter admin password:');
   if (pw === null) return;
   if (pw.trim() === ADMIN_PW) {
+    renderAdminAchievements();
     $('adminPanel').classList.add('show');
   } else {
     showToast('🔒', 'Denied', 'Wrong password');
   }
 });
+
+// Per-achievement grant/revoke grid inside the admin panel
+function renderAdminAchievements() {
+  const grid = $('adminAchGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const a of ACHIEVEMENTS) {
+    const earned = !!state.achievements[a.id];
+    const chip = document.createElement('div');
+    chip.className = 'admin-ach-chip' + (earned ? ' earned' : '');
+    chip.dataset.name = a.name;
+    chip.textContent = a.icon;
+    chip.onclick = () => {
+      if (state.achievements[a.id]) delete state.achievements[a.id];
+      else state.achievements[a.id] = 1;
+      renderAdminAchievements();
+      renderStats();
+      save();
+    };
+    grid.appendChild(chip);
+  }
+}
 
 function adminAction(act) {
   switch (act) {
