@@ -3,9 +3,38 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Claude Clicker — pixel-art idle game</title>
+<meta name="description" content="Vibe-code the universe one token at a time. A cozy pixel-art idle clicker starring the Claude Code mascot. Tap to earn, automate, prestige, and chase achievements." />
+
+<!-- PWA / installable app -->
+<link rel="manifest" href="manifest.webmanifest" />
 <meta name="theme-color" content="#14100d" />
+<meta name="color-scheme" content="dark" />
+<meta name="application-name" content="Claude Clicker" />
+<meta name="format-detection" content="telephone=no" />
+
+<!-- iOS standalone "Add to Home Screen" -->
+<meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<title>Claude Clicker</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Claude Clicker" />
+
+<!-- Icons -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
+
+<!-- Social share -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Claude Clicker" />
+<meta property="og:description" content="Vibe-code the universe one token at a time — a cozy pixel-art idle clicker." />
+<meta property="og:image" content="icons/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Claude Clicker" />
+<meta name="twitter:description" content="Vibe-code the universe one token at a time — a cozy pixel-art idle clicker." />
+<meta name="twitter:image" content="icons/og-image.png" />
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,6 +67,7 @@
   html, body {
     height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;            /* kill pull-to-refresh + scroll chaining bounce */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background:
       radial-gradient(ellipse 80% 60% at 50% 0%, rgba(217,119,87,0.08), transparent 70%),
@@ -46,9 +76,15 @@
     color: var(--text);
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;          /* no long-press save/preview popups */
+    -webkit-tap-highlight-color: transparent; /* no gray flash on tap */
+    touch-action: manipulation;           /* no double-tap-to-zoom delay */
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
+  /* allow text selection only where it's genuinely useful (nowhere by default for a game) */
+  button, .tab, .item, .nav-ico { -webkit-user-select: none; user-select: none; }
   .num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 
   .app {
@@ -1161,7 +1197,7 @@
     grid-column: 1 / -1;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 16px;
+    padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
     background: linear-gradient(180deg, var(--panel), var(--panel-2));
     border-bottom: 1px solid var(--panel-border);
     gap: 12px;
@@ -1199,7 +1235,10 @@
     align-items: stretch;
     background: linear-gradient(180deg, var(--panel-2), var(--panel-3));
     border-top: 1px solid var(--panel-border-strong);
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    min-height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   .mobile-nav button {
     flex: 1;
@@ -1249,9 +1288,12 @@
     html, body { overflow: hidden; height: 100%; }
     .app {
       grid-template-columns: 1fr;
-      grid-template-rows: 26px auto minmax(0, 1fr) 60px;
+      /* row 1 grows by the status-bar inset so the ticker clears the notch;
+         nav row is auto so it can absorb the home-indicator inset */
+      grid-template-rows: calc(26px + env(safe-area-inset-top, 0px)) auto minmax(0, 1fr) auto;
       height: 100dvh;
     }
+    .ticker { padding-top: env(safe-area-inset-top, 0px); }
     .mobile-header { display: flex; }
     .mobile-nav { display: flex; }
 
@@ -1298,9 +1340,81 @@
     .mobile-header .mh-count { font-size: 22px; }
     .mascot { width: 70vw; height: 70vw; }
   }
+
+  /* ===================== Launch splash ===================== */
+  .splash {
+    position: fixed; inset: 0; z-index: 9999;
+    display: grid; place-items: center;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 40%, rgba(217,119,87,0.16), transparent 70%),
+      linear-gradient(180deg, var(--bg-2), var(--bg-1));
+    transition: opacity 0.45s ease, visibility 0.45s ease;
+    padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+  }
+  .splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  .splash-inner {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    animation: splashIn 0.5s ease both;
+  }
+  .splash-icon {
+    width: 96px; height: 96px; border-radius: 22px; overflow: hidden;
+    box-shadow: 0 18px 50px rgba(217,119,87,0.30), inset 0 0 0 1px rgba(217,119,87,0.25);
+    animation: splashFloat 2.6s ease-in-out infinite;
+  }
+  .splash-icon img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  .splash-title { font-size: 25px; font-weight: 800; letter-spacing: -0.4px; color: var(--cream); }
+  .splash-sub { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-top: -6px; }
+  .splash-bar { width: 130px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 8px; }
+  .splash-bar span {
+    display: block; height: 100%; width: 38%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+    animation: splashLoad 1.1s ease-in-out infinite;
+  }
+  @keyframes splashIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes splashFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes splashLoad { 0% { transform: translateX(-140%); } 100% { transform: translateX(380%); } }
+
+  /* ===================== Install pill ===================== */
+  .install-pill {
+    /* desktop: bottom-right so it never collides with the centred live-stats */
+    position: fixed; right: 20px; left: auto;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 600;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 18px; border-radius: 999px;
+    font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: 0.2px;
+    color: #fff; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 10px 30px rgba(217,119,87,0.40), inset 0 1px 0 rgba(255,255,255,0.2);
+    opacity: 0; pointer-events: none; transform: translateY(20px);
+    transition: opacity 0.28s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .install-pill.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .install-pill:active { transform: translateY(1px) scale(0.97); }
+  @media (max-width: 860px) {
+    /* mobile: centred, raised clear of the live-stats chips + bottom nav */
+    .install-pill { left: 50%; right: auto; bottom: calc(118px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); }
+    .install-pill.show { transform: translate(-50%, 0); }
+    .install-pill:active { transform: translate(-50%, 1px) scale(0.97); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .splash-icon, .splash-bar span, .splash-inner { animation: none; }
+    .install-pill { transition: opacity 0.3s ease; }
+  }
 </style>
 </head>
 <body>
+<!-- Launch splash — fades out once the game boots -->
+<div class="splash" id="splash">
+  <div class="splash-inner">
+    <div class="splash-icon"><img src="icons/icon-192.png" width="96" height="96" alt="Claude Clicker" /></div>
+    <div class="splash-title">Claude Clicker</div>
+    <div class="splash-sub">vibe-coding the universe</div>
+    <div class="splash-bar"><span></span></div>
+  </div>
+</div>
+
 <div class="app">
   <div class="ticker"><div class="ticker-track" id="ticker"></div></div>
 
@@ -1464,6 +1578,8 @@
 
 <div class="save-flash" id="saveFlash">✓ saved</div>
 
+<button class="install-pill" id="installPill" hidden>⤓ Install app</button>
+
 <!-- Secret admin hotspot: tap the very top-right corner -->
 <div class="admin-hotspot" id="adminHotspot"></div>
 <div class="admin-panel" id="adminPanel">
@@ -1554,6 +1670,15 @@ let audioCtx = null;
 let soundEnabled = (localStorage.getItem('cc-sound') || 'on') !== 'off';
 let masterGain = null;
 
+// Haptic feedback. Android/Chrome honour navigator.vibrate; iOS Safari has no
+// Vibration API so this is a graceful no-op there. Kept independent of sound so
+// muted players still get tactile feedback.
+let hapticEnabled = (localStorage.getItem('cc-haptic') || 'on') !== 'off';
+function haptic(pattern) {
+  if (!hapticEnabled) return;
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch {}
+}
+
 function ensureAudio() {
   if (!audioCtx) {
     try {
@@ -1585,6 +1710,7 @@ function playTone(freq, dur, type = 'sine', gain = 0.18, when = 0) {
 }
 
 function playClick(isCombo = 0) {
+  haptic(3);
   if (!soundEnabled) return;
   const ctx = ensureAudio();
   if (!ctx) return;
@@ -1616,25 +1742,30 @@ function playClick(isCombo = 0) {
 }
 
 function playCrit() {
+  haptic(13);
   playTone(880,  0.08, 'triangle', 0.22, 0);
   playTone(1320, 0.08, 'triangle', 0.20, 0.04);
   playTone(1760, 0.18, 'sine',     0.18, 0.09);
 }
 function playPurchase() {
+  haptic(9);
   playTone(660, 0.07, 'square', 0.14, 0);
   playTone(990, 0.12, 'square', 0.14, 0.05);
 }
 function playGolden() {
+  haptic([0, 22, 32, 22]);
   playTone(660,  0.12, 'sine', 0.22, 0);
   playTone(880,  0.12, 'sine', 0.20, 0.07);
   playTone(1320, 0.18, 'sine', 0.18, 0.14);
 }
 function playAchievement() {
+  haptic([0, 16, 48, 16]);
   playTone(523, 0.10, 'triangle', 0.18, 0);
   playTone(659, 0.10, 'triangle', 0.18, 0.09);
   playTone(784, 0.16, 'triangle', 0.16, 0.18);
 }
 function playFrenzy() {
+  haptic([0, 32, 24, 32]);
   // descending power-up sweep
   if (!soundEnabled) return;
   const ctx = ensureAudio();
@@ -2799,6 +2930,77 @@ document.addEventListener('visibilitychange', () => {
 });
 
 requestAnimationFrame(tick);
+
+/* ============================== App shell: splash · PWA · install ============================== */
+// Fade out the launch splash once we've painted a frame (a short minimum
+// keeps it from flashing). Multiple triggers + a hard fallback guarantee it
+// can never get stuck on screen.
+function hideSplash() {
+  const s = $('splash');
+  if (!s || s.classList.contains('hide')) return;
+  s.classList.add('hide');
+  setTimeout(() => s.remove(), 650);
+}
+requestAnimationFrame(() => setTimeout(hideSplash, 480));
+window.addEventListener('load', () => setTimeout(hideSplash, 480));
+setTimeout(hideSplash, 4000); // hard fallback
+
+// Service worker → offline play + instant repeat loads.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// Install affordance (Android/desktop get a real prompt; iOS gets a one-time hint).
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  || window.navigator.standalone === true;
+const ua = navigator.userAgent || '';
+const isIOS = /iphone|ipad|ipod/i.test(ua)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isSafari = /safari/i.test(ua) && !/chrome|crios|fxios|edgios|android/i.test(ua);
+const INSTALL_KEY = 'cc-install-dismissed';
+let deferredInstall = null;
+const installPill = $('installPill');
+
+function showInstallPill(label) {
+  if (!installPill || isStandalone) return;
+  installPill.textContent = label;
+  installPill.hidden = false;
+  requestAnimationFrame(() => installPill.classList.add('show'));
+}
+function hideInstallPill() {
+  if (!installPill) return;
+  installPill.classList.remove('show');
+  setTimeout(() => { installPill.hidden = true; }, 320);
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  if (localStorage.getItem(INSTALL_KEY) !== '1') showInstallPill('⤓ Install app');
+});
+window.addEventListener('appinstalled', () => {
+  localStorage.setItem(INSTALL_KEY, '1');
+  hideInstallPill();
+});
+if (installPill) {
+  installPill.onclick = async () => {
+    if (deferredInstall) {
+      deferredInstall.prompt();
+      try { await deferredInstall.userChoice; } catch {}
+      deferredInstall = null;
+      hideInstallPill();
+    } else if (isIOS) {
+      showToast('⤓', 'Add to Home Screen', "Tap the Share icon, then 'Add to Home Screen'.");
+      hideInstallPill();
+    }
+  };
+}
+// iOS Safari has no beforeinstallprompt — surface a gentle, self-dismissing hint.
+if (isIOS && isSafari && !isStandalone && localStorage.getItem(INSTALL_KEY) !== '1') {
+  setTimeout(() => { showInstallPill('⤓ Add to Home Screen'); setTimeout(hideInstallPill, 9000); }, 2800);
+}
 </script>
 </body>
 </html>
