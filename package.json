@@ -1,0 +1,9 @@
+{
+  "name": "claude-clicker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Claude Clicker — static idle game + a tiny cloud-sync API (Vercel serverless + Blob).",
+  "dependencies": {
+    "@vercel/blob": "^2.4.0"
+  }
+}

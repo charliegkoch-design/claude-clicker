@@ -1053,6 +1053,79 @@
   }
   .modal button:hover { background: var(--accent-glow); }
 
+  /* Cloud sync — sidebar card */
+  .cloud-card { display: flex; flex-direction: column; gap: 8px; }
+  .cloud-blurb { font-size: 11px; color: var(--muted-dim); line-height: 1.5; }
+  .cloud-btn {
+    width: 100%;
+    background: linear-gradient(180deg, rgba(217,119,87,0.16), rgba(217,119,87,0.06));
+    color: var(--accent-glow);
+    border: 1px solid var(--panel-border-strong);
+    padding: 10px; border-radius: 10px; font-weight: 700; font-size: 12px;
+    letter-spacing: 0.3px; cursor: pointer; font-family: inherit; transition: all 0.15s;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cloud-btn:hover { background: rgba(217,119,87,0.22); transform: translateY(-1px); border-color: var(--accent); }
+  .cloud-btn.synced { color: #7ee0a8; border-color: rgba(126,224,168,0.4); background: linear-gradient(180deg, rgba(126,224,168,0.14), rgba(126,224,168,0.05)); }
+  .cloud-btn.synced:hover { background: rgba(126,224,168,0.2); border-color: rgba(126,224,168,0.6); }
+  .section-head .pill.on { color: #7ee0a8; background: rgba(126,224,168,0.12); }
+
+  /* Cloud sync — modal */
+  .cloud-modal { position: relative; width: 360px; max-width: calc(100vw - 32px); text-align: center; }
+  .cloud-modal .modal-x {
+    position: absolute; top: 10px; right: 12px; background: transparent; border: none;
+    color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer;
+    padding: 4px 8px; margin: 0; border-radius: 8px;
+  }
+  .cloud-modal .modal-x:hover { color: var(--cream); background: rgba(255,255,255,0.06); }
+  .cloud-ico { font-size: 34px; margin-bottom: 4px; }
+  .cloud-desc { font-size: 12px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
+  .cloud-modal .cloud-action {
+    width: 100%; background: var(--accent); color: var(--cream); border: none;
+    padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13px;
+    letter-spacing: 0.3px; cursor: pointer; font-family: inherit; margin: 0; transition: all 0.15s;
+  }
+  .cloud-modal .cloud-action:hover { background: var(--accent-glow); transform: translateY(-1px); }
+  .cloud-modal .cloud-action:disabled { opacity: 0.55; cursor: default; transform: none; }
+  .cloud-modal .cloud-action.ghost { background: transparent; border: 1px solid var(--panel-border-strong); color: var(--accent-glow); }
+  .cloud-modal .cloud-action.ghost:hover { background: rgba(217,119,87,0.12); }
+  .cloud-modal .cloud-action.small { width: auto; flex: 1; padding: 10px; font-size: 12px; }
+  .cloud-or { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: var(--muted-dim); font-size: 11px; }
+  .cloud-or::before, .cloud-or::after { content: ''; flex: 1; height: 1px; background: var(--panel-border); }
+  .cloud-label { display: block; text-align: left; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .cloud-input {
+    width: 100%; box-sizing: border-box; background: var(--panel-3);
+    border: 1px solid var(--panel-border-strong); color: var(--cream);
+    padding: 11px 12px; border-radius: 10px; font-family: 'JetBrains Mono', monospace;
+    font-size: 16px; letter-spacing: 2px; text-align: center; text-transform: uppercase;
+    margin-bottom: 10px; outline: none;
+  }
+  .cloud-input:focus { border-color: var(--accent); }
+  .cloud-input::placeholder { color: var(--muted-dim); letter-spacing: 2px; }
+  .cloud-code-box {
+    display: flex; align-items: center; gap: 8px; justify-content: space-between;
+    background: var(--panel-3); border: 1px dashed var(--panel-border-strong);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;
+  }
+  .cloud-code-box code {
+    font-family: 'JetBrains Mono', monospace; font-size: 17px; letter-spacing: 1px;
+    color: var(--accent-glow); font-weight: 700; user-select: all; -webkit-user-select: all;
+  }
+  .cloud-modal .cloud-copy {
+    background: rgba(217,119,87,0.14); color: var(--accent-glow);
+    border: 1px solid var(--panel-border-strong); border-radius: 8px;
+    padding: 7px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+    font-family: inherit; margin: 0; white-space: nowrap; transition: all 0.15s;
+  }
+  .cloud-modal .cloud-copy:hover { background: rgba(217,119,87,0.25); }
+  .cloud-status { font-size: 11px; color: var(--muted); margin-bottom: 12px; min-height: 14px; }
+  .cloud-status.ok { color: #7ee0a8; }
+  .cloud-status.err { color: #ff8b7b; }
+  .cloud-row { display: flex; gap: 8px; }
+  .cloud-msg { font-size: 11px; color: var(--muted); margin-top: 12px; min-height: 14px; line-height: 1.5; }
+  .cloud-msg.ok { color: #7ee0a8; }
+  .cloud-msg.err { color: #ff8b7b; }
+
   /* Save-confirmation flash */
   .save-flash {
     position: fixed;
@@ -1506,6 +1579,19 @@
 
     <hr/>
 
+    <div>
+      <div class="section-head">
+        <span>Cloud sync</span>
+        <span class="pill" id="cloudPill">off</span>
+      </div>
+      <div class="cloud-card">
+        <div class="cloud-blurb" id="cloudBlurb">Save your account to the cloud and load it on any device with a sync code.</div>
+        <button class="cloud-btn" id="cloudBtn">☁ Set up cloud sync</button>
+      </div>
+    </div>
+
+    <hr/>
+
     <button class="reset-btn" id="resetBtn">↻ Hard reset</button>
   </aside>
 
@@ -1573,6 +1659,40 @@
     <div class="award" id="awayAward">0</div>
     <div class="away-time">tokens at 50% offline rate</div>
     <button onclick="document.getElementById('welcomeBack').classList.remove('show')">Sweet</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="cloudModal">
+  <div class="modal cloud-modal">
+    <button class="modal-x" id="cloudClose" aria-label="Close">×</button>
+    <div class="cloud-ico">☁</div>
+    <h2>Cloud sync</h2>
+
+    <!-- Not signed in -->
+    <div id="cloudViewOff">
+      <p class="cloud-desc">Sync your progress across devices. Create a code here, then enter it on another device to load this account.</p>
+      <button class="cloud-action" id="cloudCreate">✨ Create my sync code</button>
+      <div class="cloud-or"><span>or</span></div>
+      <label class="cloud-label" for="cloudCodeInput">Have a code? Enter it to log in</label>
+      <input id="cloudCodeInput" class="cloud-input" type="text" inputmode="latin" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX" maxlength="14" />
+      <button class="cloud-action ghost" id="cloudConnect">Log in with code</button>
+      <div class="cloud-msg" id="cloudMsg"></div>
+    </div>
+
+    <!-- Signed in -->
+    <div id="cloudViewOn" hidden>
+      <p class="cloud-desc">This device is synced. Enter this code on another device (then tap &ldquo;Log in with code&rdquo;) to load your account there.</p>
+      <div class="cloud-code-box">
+        <code id="cloudCodeShow">––––-––––-––––</code>
+        <button class="cloud-copy" id="cloudCopy" title="Copy code">⧉ Copy</button>
+      </div>
+      <div class="cloud-status" id="cloudStatus">Synced</div>
+      <div class="cloud-row">
+        <button class="cloud-action small" id="cloudSyncNow">↻ Sync now</button>
+        <button class="cloud-action small ghost" id="cloudDisconnect">Disconnect</button>
+      </div>
+      <div class="cloud-msg" id="cloudMsg2"></div>
+    </div>
   </div>
 </div>
 
@@ -1678,6 +1798,13 @@ function haptic(pattern) {
   if (!hapticEnabled) return;
   try { if (navigator.vibrate) navigator.vibrate(pattern); } catch {}
 }
+
+// Cloud sync state. Declared up here so save() can safely mirror to the cloud;
+// the sync-code logic itself lives in the "Cloud sync" module near the end.
+let cloudCode = localStorage.getItem('cc-cloud-code') || '';
+let cloudBusy = false;
+let cloudPushTimer = null;
+let cloudLastSync = 0;
 
 function ensureAudio() {
   if (!audioCtx) {
@@ -2805,20 +2932,26 @@ function flashSaved() {
   saveFlashTimer = setTimeout(() => el.classList.remove('show'), 1000);
 }
 
+// The canonical save payload — shared by localStorage and cloud sync.
+function serializeState() {
+  return {
+    count: state.count, totalEarned: state.totalEarned, totalClicks: state.totalClicks,
+    goldenClicked: state.goldenClicked, upgrades: state.upgrades, clickUpgrades: state.clickUpgrades,
+    achievements: state.achievements, startedAt: state.startedAt,
+    vibes: state.vibes, ascensions: state.ascensions, lastSaveTime: state.lastSaveTime,
+    maxCombo: state.maxCombo || 0, frenzyCount: state.frenzyCount || 0,
+    tiers: state.tiers || {}, powers: state.powers || {},
+  };
+}
 function save(silent) {
   if (wipingSave) return false;
   try {
     state.lastSaveTime = Date.now();
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      count: state.count, totalEarned: state.totalEarned, totalClicks: state.totalClicks,
-      goldenClicked: state.goldenClicked, upgrades: state.upgrades, clickUpgrades: state.clickUpgrades,
-      achievements: state.achievements, startedAt: state.startedAt,
-      vibes: state.vibes, ascensions: state.ascensions, lastSaveTime: state.lastSaveTime,
-      maxCombo: state.maxCombo || 0, frenzyCount: state.frenzyCount || 0,
-      tiers: state.tiers || {}, powers: state.powers || {},
-    }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify(serializeState()));
     // verify it actually persisted (catches private-mode / quota failures)
     if (localStorage.getItem(SAVE_KEY) && !silent) flashSaved();
+    // Mirror to the cloud (throttled) when this device is signed in.
+    if (cloudCode && typeof cloudPushSoon === 'function') cloudPushSoon();
     return true;
   } catch (err) {
     if (!silent) {
@@ -2827,6 +2960,19 @@ function save(silent) {
     }
     return false;
   }
+}
+// Apply a decoded save object onto state, filling any missing fields. Shared
+// by local load and cloud pull so both paths normalize the same way.
+function applySaveData(d) {
+  if (!d || typeof d !== 'object') return;
+  Object.assign(state, d);
+  if (!state.upgrades) state.upgrades = {};
+  if (!state.clickUpgrades) state.clickUpgrades = {};
+  if (!state.achievements) state.achievements = {};
+  if (!state.startedAt) state.startedAt = Date.now();
+  if (!state.vibes) state.vibes = 0;
+  if (!state.tiers) state.tiers = {};
+  if (!state.powers) state.powers = {};
 }
 function load() {
   try {
@@ -2840,15 +2986,7 @@ function load() {
       }
     }
     if (!raw) return;
-    const d = JSON.parse(raw);
-    Object.assign(state, d);
-    if (!state.upgrades) state.upgrades = {};
-    if (!state.clickUpgrades) state.clickUpgrades = {};
-    if (!state.achievements) state.achievements = {};
-    if (!state.startedAt) state.startedAt = Date.now();
-    if (!state.vibes) state.vibes = 0;
-    if (!state.tiers) state.tiers = {};
-    if (!state.powers) state.powers = {};
+    applySaveData(JSON.parse(raw));
 
     if (state.lastSaveTime) {
       const away = Math.min(8 * 3600_000, Date.now() - state.lastSaveTime);
@@ -3001,6 +3139,250 @@ if (installPill) {
 if (isIOS && isSafari && !isStandalone && localStorage.getItem(INSTALL_KEY) !== '1') {
   setTimeout(() => { showInstallPill('⤓ Add to Home Screen'); setTimeout(hideInstallPill, 9000); }, 2800);
 }
+
+/* ============================== Cloud sync (cross-device sync codes) ============================== */
+// One device creates a high-entropy code and pushes its save to the cloud (a
+// tiny serverless function backed by Vercel Blob). Another device types the
+// code to pull that account down — after that, both devices auto-sync. The
+// code is the only credential; the storage token never leaves the server.
+const CLOUD_CODE_KEY = 'cc-cloud-code';
+const CLOUD_API = 'api/cloud';                              // relative → /api/cloud in production
+const CLOUD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';  // Crockford base32 (no I/L/O/U)
+const CLOUD_MIN_INTERVAL = 20000;                           // throttle background pushes during play
+
+function genCode() {
+  const a = new Uint8Array(12);
+  if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
+  else for (let i = 0; i < 12; i++) a[i] = Math.floor(Math.random() * 256);
+  let s = '';
+  for (let i = 0; i < 12; i++) s += CLOUD_ALPHABET[a[i] % 32];
+  return s;
+}
+const normCode = (c) => String(c || '').toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 16);
+const prettyCode = (c) => normCode(c).replace(/(.{4})(?=.)/g, '$1-');
+
+async function cloudPut(code) {
+  const res = await fetch(CLOUD_API + '?code=' + encodeURIComponent(code), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ save: serializeState() }),
+  });
+  if (!res.ok) throw new Error('push_' + res.status);
+  return res.json();
+}
+async function cloudGet(code) {
+  const res = await fetch(CLOUD_API + '?code=' + encodeURIComponent(code), { method: 'GET' });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('pull_' + res.status);
+  const j = await res.json();
+  return (j && j.ok) ? j : null;
+}
+// Fire-and-forget push that survives page unload (a normal fetch gets cancelled).
+function cloudBeacon() {
+  if (!cloudCode || !navigator.sendBeacon) return;
+  try {
+    const body = new Blob([JSON.stringify({ save: serializeState() })], { type: 'application/json' });
+    navigator.sendBeacon(CLOUD_API + '?code=' + encodeURIComponent(cloudCode), body);
+  } catch {}
+}
+
+// Throttled background push: at most one write per CLOUD_MIN_INTERVAL while playing.
+function cloudPushSoon() {
+  if (!cloudCode || cloudPushTimer) return;
+  const wait = Math.max(2000, CLOUD_MIN_INTERVAL - (Date.now() - cloudLastSync));
+  cloudPushTimer = setTimeout(() => { cloudPushTimer = null; cloudPushNow(true); }, wait);
+}
+async function cloudPushNow(silent) {
+  if (!cloudCode || cloudBusy) return false;
+  cloudBusy = true;
+  if (!silent) setCloudStatus('Syncing…');
+  try {
+    await cloudPut(cloudCode);
+    cloudLastSync = Date.now();
+    setCloudStatus('Synced just now', 'ok');
+    return true;
+  } catch (e) {
+    setCloudStatus('Offline — will retry', 'err');
+    return false;
+  } finally { cloudBusy = false; }
+}
+// Pull the cloud copy and adopt it when it's further along than this device.
+async function cloudPullAndMerge(opts) {
+  opts = opts || {};
+  if (!cloudCode) return;
+  setCloudStatus('Checking cloud…');
+  try {
+    const remote = await cloudGet(cloudCode);
+    if (!remote || !remote.save) {
+      if (opts.seedIfMissing) await cloudPushNow(true);   // first device → seed the cloud
+      else setCloudStatus('No cloud save yet', '');
+      return;
+    }
+    const rTotal = +remote.save.totalEarned || 0;
+    const lTotal = +state.totalEarned || 0;
+    if (rTotal > lTotal + 1 || opts.force) {
+      applySaveData(remote.save);
+      save(true);
+      refreshAllUI();
+      cloudLastSync = Date.now();
+      setCloudStatus('Loaded newer cloud save', 'ok');
+    } else {
+      cloudLastSync = Date.now();
+      if (opts.pushNow) await cloudPushNow(false);  // explicit "Sync now" → push immediately
+      else { setCloudStatus('Synced', 'ok'); cloudPushSoon(); }
+    }
+  } catch (e) {
+    setCloudStatus('Offline', 'err');
+  }
+}
+function refreshAllUI() { recalcCps(); recalcClick(); renderShop(); renderStats(); }
+
+/* ---- Cloud UI ---- */
+function setCloudStatus(text, cls) {
+  const el = $('cloudStatus');
+  if (el) { el.textContent = text; el.className = 'cloud-status' + (cls ? ' ' + cls : ''); }
+}
+function setCloudMsg(id, text, cls) {
+  const el = $(id);
+  if (el) { el.textContent = text; el.className = 'cloud-msg' + (cls ? ' ' + cls : ''); }
+}
+function updateCloudPill() {
+  const pill = $('cloudPill'), btn = $('cloudBtn'), blurb = $('cloudBlurb');
+  if (cloudCode) {
+    if (pill) { pill.textContent = 'on'; pill.classList.add('on'); }
+    if (btn) { btn.textContent = '☁ ' + prettyCode(cloudCode); btn.classList.add('synced'); }
+    if (blurb) blurb.textContent = 'Backed up to the cloud. Use your code on another device to load this account.';
+  } else {
+    if (pill) { pill.textContent = 'off'; pill.classList.remove('on'); }
+    if (btn) { btn.textContent = '☁ Set up cloud sync'; btn.classList.remove('synced'); }
+    if (blurb) blurb.textContent = 'Save your account to the cloud and load it on any device with a sync code.';
+  }
+}
+function renderCloudViews() {
+  const on = !!cloudCode;
+  if ($('cloudViewOff')) $('cloudViewOff').hidden = on;
+  if ($('cloudViewOn')) $('cloudViewOn').hidden = !on;
+  if (on) {
+    if ($('cloudCodeShow')) $('cloudCodeShow').textContent = prettyCode(cloudCode);
+    setCloudMsg('cloudMsg2', '');
+    setCloudStatus(cloudLastSync ? 'Synced' : 'Ready', cloudLastSync ? 'ok' : '');
+  } else {
+    setCloudMsg('cloudMsg', '');
+    if ($('cloudCodeInput')) $('cloudCodeInput').value = '';
+  }
+}
+function openCloudModal() { renderCloudViews(); if ($('cloudModal')) $('cloudModal').classList.add('show'); }
+function closeCloudModal() { if ($('cloudModal')) $('cloudModal').classList.remove('show'); }
+
+async function cloudCreate() {
+  const btn = $('cloudCreate');
+  if (btn) btn.disabled = true;
+  setCloudMsg('cloudMsg', 'Creating your code…');
+  const prev = cloudCode;
+  cloudCode = genCode();
+  const ok = await cloudPushNow(true);
+  if (ok) {
+    localStorage.setItem(CLOUD_CODE_KEY, cloudCode);
+    cloudLastSync = Date.now();
+    updateCloudPill();
+    renderCloudViews();
+    showToast('☁', 'Cloud sync on', 'Your code: ' + prettyCode(cloudCode));
+    haptic(9);
+  } else {
+    cloudCode = prev;
+    setCloudMsg('cloudMsg', 'Couldn’t reach the cloud. Check your connection and try again.', 'err');
+  }
+  if (btn) btn.disabled = false;
+}
+async function cloudConnect() {
+  const inp = $('cloudCodeInput');
+  const code = normCode(inp && inp.value);
+  if (code.length < 8) { setCloudMsg('cloudMsg', 'That code looks too short.', 'err'); return; }
+  const btn = $('cloudConnect');
+  if (btn) btn.disabled = true;
+  setCloudMsg('cloudMsg', 'Looking up your account…');
+  try {
+    const remote = await cloudGet(code);
+    if (!remote || !remote.save) {
+      setCloudMsg('cloudMsg', 'No account found for that code.', 'err');
+      if (btn) btn.disabled = false;
+      return;
+    }
+    const rTotal = +remote.save.totalEarned || 0;
+    const lTotal = +state.totalEarned || 0;
+    if (lTotal > rTotal + 1 &&
+        !confirm('This device has more progress (' + fmt(lTotal) + ' all-time) than that account (' + fmt(rTotal) + '). Load the cloud account anyway and replace what’s on this device?')) {
+      setCloudMsg('cloudMsg', 'Kept this device’s progress. Tip: tap “Create my sync code” to back it up instead.');
+      if (btn) btn.disabled = false;
+      return;
+    }
+    applySaveData(remote.save);
+    cloudCode = code;
+    localStorage.setItem(CLOUD_CODE_KEY, cloudCode);
+    save(true);
+    refreshAllUI();
+    cloudLastSync = Date.now();
+    updateCloudPill();
+    renderCloudViews();
+    showToast('☁', 'Account loaded', 'Synced from your code');
+    haptic([0, 16, 48, 16]);
+  } catch (e) {
+    setCloudMsg('cloudMsg', 'Couldn’t reach the cloud. Try again.', 'err');
+  }
+  if (btn) btn.disabled = false;
+}
+function cloudDisconnect() {
+  if (!confirm('Disconnect cloud sync on this device? Your progress stays here, and your code keeps working on your other devices.')) return;
+  cloudCode = '';
+  cloudLastSync = 0;
+  clearTimeout(cloudPushTimer); cloudPushTimer = null;
+  localStorage.removeItem(CLOUD_CODE_KEY);
+  updateCloudPill();
+  renderCloudViews();
+  showToast('☁', 'Cloud sync off', 'This device is no longer syncing');
+}
+async function cloudCopyCode() {
+  try {
+    await navigator.clipboard.writeText(prettyCode(cloudCode));
+    setCloudMsg('cloudMsg2', 'Copied to clipboard!', 'ok');
+  } catch {
+    setCloudMsg('cloudMsg2', 'Tap and hold the code to copy it.', '');
+  }
+  setTimeout(() => setCloudMsg('cloudMsg2', ''), 2500);
+}
+
+(function cloudInit() {
+  const wire = (id, fn, evt) => { const el = $(id); if (el) el.addEventListener(evt || 'click', fn); };
+  wire('cloudBtn', openCloudModal);
+  wire('cloudClose', closeCloudModal);
+  wire('cloudCreate', cloudCreate);
+  wire('cloudConnect', cloudConnect);
+  wire('cloudDisconnect', cloudDisconnect);
+  wire('cloudCopy', cloudCopyCode);
+  wire('cloudSyncNow', () => cloudPullAndMerge({ pushNow: true }));
+  const modal = $('cloudModal');
+  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeCloudModal(); });
+  const inp = $('cloudCodeInput');
+  if (inp) {
+    inp.addEventListener('input', () => {
+      const start = inp.selectionStart, before = inp.value;
+      inp.value = prettyCode(inp.value);
+      if (inp.value.length !== before.length && start != null) {
+        const delta = inp.value.length - before.length;
+        try { inp.setSelectionRange(start + delta, start + delta); } catch {}
+      }
+    });
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') cloudConnect(); });
+  }
+  // Persist to the cloud reliably when leaving / backgrounding the app.
+  window.addEventListener('pagehide', cloudBeacon);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cloudBeacon(); });
+
+  updateCloudPill();
+  // Already signed in? Reconcile with the cloud in the background — local save
+  // has already loaded, so play starts instantly regardless.
+  if (cloudCode) cloudPullAndMerge({ seedIfMissing: true });
+})();
 </script>
 </body>
 </html>

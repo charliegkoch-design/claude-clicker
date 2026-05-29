@@ -1,6 +1,6 @@
 /* Claude Clicker service worker — offline support + fast loads.
    Bump CACHE on each release so clients pick up the new shell. */
-const CACHE = 'claude-clicker-v2';
+const CACHE = 'claude-clicker-v3';
 const CORE = [
   './',
   './index.html',
@@ -40,6 +40,10 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  // Cloud-sync API → never cache; always hit the network (and let it fail
+  // gracefully offline). Must come before the same-origin cache-first rule.
+  if (url.origin === self.location.origin && url.pathname.includes('/api/')) return;
 
   // App navigation → network-first (so updates land), cached shell when offline.
   if (req.mode === 'navigate') {
