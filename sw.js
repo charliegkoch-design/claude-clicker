@@ -1,6 +1,6 @@
 /* Claude Clicker service worker — offline support + fast loads.
    Bump CACHE on each release so clients pick up the new shell. */
-const CACHE = 'claude-clicker-v3';
+const CACHE = 'claude-clicker-v4';
 const CORE = [
   './',
   './index.html',

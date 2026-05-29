@@ -1126,6 +1126,35 @@
   .cloud-msg.ok { color: #7ee0a8; }
   .cloud-msg.err { color: #ff8b7b; }
 
+  /* Compete — sidebar row */
+  .compete-row { display: flex; gap: 8px; }
+  .compete-row .cloud-btn { padding: 9px 6px; font-size: 11px; }
+
+  /* Leaderboard — modal */
+  .lb-modal { width: 400px; text-align: center; }
+  .lb-submit { display: flex; gap: 8px; align-items: stretch; }
+  .lb-submit .cloud-input { margin-bottom: 0; flex: 1; text-align: left; letter-spacing: 0.5px; text-transform: none; font-family: inherit; font-size: 14px; }
+  .lb-submit .cloud-action.small { flex: 0 0 auto; width: auto; white-space: nowrap; }
+  .lb-list {
+    margin-top: 14px; max-height: 46vh; overflow-y: auto; text-align: left;
+    display: flex; flex-direction: column; gap: 4px;
+    border-top: 1px solid var(--panel-border); padding-top: 10px;
+  }
+  .lb-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 9px; background: var(--panel-3);
+    border: 1px solid transparent;
+  }
+  .lb-row.me { border-color: var(--accent); background: rgba(217,119,87,0.12); }
+  .lb-rank { font-weight: 800; font-size: 13px; color: var(--muted); min-width: 32px; }
+  .lb-row.top .lb-rank { color: var(--accent-glow); }
+  .lb-name { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .lb-nm { font-weight: 700; font-size: 13px; color: var(--cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-sub { font-size: 10px; color: var(--muted-dim); }
+  .lb-score { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent-glow); font-weight: 700; white-space: nowrap; }
+  .lb-empty { font-size: 12px; color: var(--muted-dim); text-align: center; padding: 18px 0; }
+  .lb-foot { font-size: 10px; color: var(--muted-dim); text-align: center; margin-top: 12px; }
+
   /* Save-confirmation flash */
   .save-flash {
     position: fixed;
@@ -1581,6 +1610,22 @@
 
     <div>
       <div class="section-head">
+        <span>Compete</span>
+        <span class="pill" id="rankPill">—</span>
+      </div>
+      <div class="cloud-card">
+        <div class="cloud-blurb">Show off your run, or climb the all-time leaderboard.</div>
+        <div class="compete-row">
+          <button class="cloud-btn" id="shareBtn">🔗 Share</button>
+          <button class="cloud-btn" id="leaderboardBtn">🏆 Leaderboard</button>
+        </div>
+      </div>
+    </div>
+
+    <hr/>
+
+    <div>
+      <div class="section-head">
         <span>Cloud sync</span>
         <span class="pill" id="cloudPill">off</span>
       </div>
@@ -1693,6 +1738,22 @@
       </div>
       <div class="cloud-msg" id="cloudMsg2"></div>
     </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="lbModal">
+  <div class="modal cloud-modal lb-modal">
+    <button class="modal-x" id="lbClose" aria-label="Close">×</button>
+    <div class="cloud-ico">🏆</div>
+    <h2>All-time leaderboard</h2>
+    <p class="cloud-desc">Top vibe-coders by all-time tokens. Submit your run to claim a spot.</p>
+    <div class="lb-submit">
+      <input id="lbName" class="cloud-input" type="text" autocomplete="off" spellcheck="false" placeholder="Your name" maxlength="16" />
+      <button class="cloud-action small" id="lbSubmit">Submit my score</button>
+    </div>
+    <div class="cloud-msg" id="lbMsg"></div>
+    <div class="lb-list" id="lbList"><div class="lb-empty">Loading…</div></div>
+    <div class="lb-foot">Scores are self-reported — play fair ✌️</div>
   </div>
 </div>
 
@@ -1954,6 +2015,9 @@ const SHOP_AUTO = [
   { id: 'deity',        name: 'Token Deity',   desc: 'Tokens worship you back',            icon: '🛐', baseCost: 3_000_000_000_000_000, cps: 2_700_000_000 },
   { id: 'omniverse',    name: 'Omniverse Mesh',desc: 'Every possible Claude, in parallel', icon: '🕸️', baseCost: 45_000_000_000_000_000, cps: 17_000_000_000 },
   { id: 'transcend',    name: 'Transcendence', desc: 'You are the token now',              icon: '🌀', baseCost: 700_000_000_000_000_000, cps: 100_000_000_000 },
+  { id: 'godhead',      name: 'Godhead Array', desc: 'Compute that dreams of itself',       icon: '🧬', baseCost: 11_000_000_000_000_000_000, cps: 600_000_000_000 },
+  { id: 'loom',         name: 'Cosmic Loom',   desc: 'Weaves spacetime into tokens',        icon: '🪡', baseCost: 160_000_000_000_000_000_000, cps: 3_600_000_000_000 },
+  { id: 'source',       name: 'The Source',    desc: 'Where all tokens come from',          icon: '🫧', baseCost: 2_400_000_000_000_000_000_000, cps: 22_000_000_000_000 },
 ];
 
 const SHOP_CLICK = [
@@ -1967,6 +2031,8 @@ const SHOP_CLICK = [
   { id: 'quantum',   name: 'Quantum Click',    desc: '+5,000 per click',            icon: '⚛️', baseCost: 1_000_000_000,   flat: 5000 },
   { id: 'chrono',    name: 'Chrono Gloves',    desc: '+100% click mult per level',  icon: '🧪', baseCost: 25_000_000_000,  multBonus: 1 },
   { id: 'infinity',  name: 'Infinity Click',   desc: '+50,000 per click',           icon: '∞',  baseCost: 500_000_000_000, flat: 50000 },
+  { id: 'cosmicclick',name: 'Cosmic Click',     desc: '+500,000 per click',          icon: '💫', baseCost: 25_000_000_000_000, flat: 500000 },
+  { id: 'realitytap', name: 'Reality Tap',      desc: '+300% click mult per level',  icon: '🧿', baseCost: 1_000_000_000_000_000, multBonus: 3 },
 ];
 
 // Global power-ups — one-time purchases with permanent buffs
@@ -1982,6 +2048,9 @@ const SHOP_POWER = [
   { id: 'vibedouble',  name: 'Vibe Doubler',   desc: 'Each Vibe gives +2% (was +1%)',                 icon: '🪐', cost: 500_000_000_000 },
   { id: 'critchain',   name: 'Crit Chain',     desc: 'Crit chance: 6% → 12%',                         icon: '🌪️', cost: 5_000_000_000_000 },
   { id: 'goldenboost', name: 'Golden Boost',   desc: 'Golden rewards 3× bigger',                      icon: '👑', cost: 25_000_000_000_000 },
+  { id: 'critmax',     name: 'Crit Storm',     desc: 'Crit chance: 12% → 20%',                        icon: '🌩️', cost: 120_000_000_000_000 },
+  { id: 'frenzyforever',name:'Endless Frenzy', desc: 'Frenzy duration: 30s → 60s',                    icon: '⌛', cost: 800_000_000_000_000 },
+  { id: 'vibetriple',  name: 'Vibe Tripler',   desc: 'Each Vibe gives +3% (was +2%)',                 icon: '🔱', cost: 6_000_000_000_000_000 },
 ];
 
 // Tier upgrades — generated for each building, unlock at 1/25/100 owned
@@ -2087,6 +2156,24 @@ const ACHIEVEMENTS = [
   { id: 'power5',     icon: '⚡', name: 'Power user',             cond: s => Object.keys(s.powers || {}).length >= 5 },
   { id: 'power_all',  icon: '🎛️', name: 'All systems online',     cond: s => Object.keys(s.powers || {}).length >= SHOP_POWER.length },
   { id: 'tier3any',   icon: '💠', name: 'Tier III!',              cond: s => Object.keys(s.tiers || {}).some(k => k.endsWith('-3')) },
+
+  // — Cosmic tier (new content) —
+  { id: 'tok1qi',     icon: '🌌', name: 'Quintillionaire',        cond: s => s.totalEarned >= 1e18 },
+  { id: 'tok1sx',     icon: '🌠', name: 'Sextillionaire',         cond: s => s.totalEarned >= 1e21 },
+  { id: 'source1',    icon: '🫧', name: 'Origin point',           cond: s => (s.upgrades.source || 0) >= 1 },
+  { id: 'godhead10',  icon: '🧬', name: 'Self-aware',             cond: s => (s.upgrades.godhead || 0) >= 10 },
+  { id: 'cps1qa',     icon: '🌪️', name: 'Quadrillion per second', cond: s => s.cps >= 1e15 },
+  { id: 'cpc1t',      icon: '🦾', name: 'Teraclick',              cond: s => effectiveCpc() >= 1e12 },
+  { id: 'click5m',    icon: '🏹', name: 'Five million clicks',    cond: s => s.totalClicks >= 5_000_000 },
+  { id: 'vibes10k',   icon: '🪐', name: 'Vibe singularity',       cond: s => (s.vibes || 0) >= 10000 },
+  { id: 'buy1000',    icon: '🏰', name: 'A thousand of a kind',   cond: s => Object.values(s.upgrades || {}).some(v => v >= 1000) },
+  { id: 'maxcombo500',icon: '🗡️', name: '500-combo',              cond: s => (s.maxCombo || 0) >= 500 },
+  { id: 'frenzy200',  icon: '🌋', name: 'Frenzy legend',          cond: s => (s.frenzyCount || 0) >= 200 },
+
+  // — Social / sync —
+  { id: 'cloudon',    icon: '☁️', name: 'Head in the cloud',      cond: s => !!s.cloudOnce },
+  { id: 'shared',     icon: '🔗', name: 'Word of mouth',          cond: s => !!s.sharedOnce },
+  { id: 'ranked',     icon: '🏅', name: 'On the board',           cond: s => !!s.rankedOnce },
 ];
 
 const NEWS = [
@@ -2144,13 +2231,14 @@ function buildingMult(id) {
 }
 
 function vibeMult() {
-  const per = hasPower('vibedouble') ? 0.02 : 0.01;
+  const per = hasPower('vibetriple') ? 0.03 : hasPower('vibedouble') ? 0.02 : 0.01;
   return 1 + ((state.vibes || 0) * per);
 }
 function frenzyActiveMult() { return hasPower('powerfrenzy') ? 15 : 7; }
 function frenzyMult() { return Date.now() < state.frenzyUntil ? frenzyActiveMult() : 1; }
-function frenzyDuration() { return hasPower('longfrenzy') ? 30_000 : 15_000; }
+function frenzyDuration() { return hasPower('frenzyforever') ? 60_000 : hasPower('longfrenzy') ? 30_000 : 15_000; }
 function critChance() {
+  if (hasPower('critmax')) return 0.20;
   if (hasPower('critchain')) return 0.12;
   if (hasPower('espresso')) return 0.06;
   return 0.03;
@@ -2941,6 +3029,8 @@ function serializeState() {
     vibes: state.vibes, ascensions: state.ascensions, lastSaveTime: state.lastSaveTime,
     maxCombo: state.maxCombo || 0, frenzyCount: state.frenzyCount || 0,
     tiers: state.tiers || {}, powers: state.powers || {},
+    playerName: state.playerName || '',
+    cloudOnce: state.cloudOnce ? 1 : 0, sharedOnce: state.sharedOnce ? 1 : 0, rankedOnce: state.rankedOnce ? 1 : 0,
   };
 }
 function save(silent) {
@@ -3283,6 +3373,7 @@ async function cloudCreate() {
   const ok = await cloudPushNow(true);
   if (ok) {
     localStorage.setItem(CLOUD_CODE_KEY, cloudCode);
+    state.cloudOnce = 1;
     cloudLastSync = Date.now();
     updateCloudPill();
     renderCloudViews();
@@ -3318,6 +3409,7 @@ async function cloudConnect() {
     }
     applySaveData(remote.save);
     cloudCode = code;
+    state.cloudOnce = 1;
     localStorage.setItem(CLOUD_CODE_KEY, cloudCode);
     save(true);
     refreshAllUI();
@@ -3382,6 +3474,199 @@ async function cloudCopyCode() {
   // Already signed in? Reconcile with the cloud in the background — local save
   // has already loaded, so play starts instantly regardless.
   if (cloudCode) cloudPullAndMerge({ seedIfMissing: true });
+})();
+
+/* ============================== Compete: share + leaderboard ============================== */
+const LB_API = 'api/leaderboard';                 // relative → /api/leaderboard in production
+const PLAYER_ID_KEY = 'cc-player-id';
+const NAME_KEY = 'cc-name';
+
+// A stable, NON-sensitive player id for leaderboard upserts. Deliberately
+// separate from the cloud sync code (a secret credential) so it can safely
+// live in the public leaderboard blob.
+function getPlayerId() {
+  let id = localStorage.getItem(PLAYER_ID_KEY);
+  if (!id) {
+    id = 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+    localStorage.setItem(PLAYER_ID_KEY, id);
+  }
+  return id;
+}
+function savedName() { return (state.playerName || localStorage.getItem(NAME_KEY) || '').slice(0, 16); }
+function gameUrl() {
+  const o = location.origin || '';
+  if (/^https?:\/\//.test(o) && !/localhost|127\.0\.0\.1/.test(o)) return o + location.pathname.replace(/[^/]*$/, '');
+  return 'https://claude-clicker.vercel.app/';
+}
+function lbEsc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function scoreSummary() {
+  return {
+    total: state.totalEarned || 0,
+    cps: state.cps || 0,
+    cpc: effectiveCpc(),
+    vibes: state.vibes || 0,
+    ascensions: state.ascensions || 0,
+    ach: Object.keys(state.achievements || {}).length,
+    achTotal: ACHIEVEMENTS.length,
+  };
+}
+function buildShareText() {
+  const s = scoreSummary();
+  return [
+    '🤖 Claude Clicker',
+    `💰 ${fmt(s.total)} tokens earned all-time`,
+    `⚡ ${fmt(s.cpc)}/click · 📈 ${fmt(s.cps)}/s`,
+    `🪐 ${fmt(s.vibes)} Vibes${s.ascensions ? ' · ' + s.ascensions + ' ascension' + (s.ascensions > 1 ? 's' : '') : ''}`,
+    `🏆 ${s.ach}/${s.achTotal} achievements`,
+    '',
+    'Can you out-vibe me?',
+  ].join('\n');
+}
+function markShared() {
+  if (!state.sharedOnce) { state.sharedOnce = 1; checkAchievements(); save(true); }
+}
+async function shareScore() {
+  const text = buildShareText();
+  const url = gameUrl();
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Claude Clicker', text, url }); markShared(); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; /* unsupported → fall through to copy */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text + '\n' + url);
+    showToast('📋', 'Copied', 'Score copied — paste it anywhere');
+    markShared();
+  } catch {
+    window.prompt('Copy your score:', text + '\n' + url);
+    markShared();
+  }
+}
+
+/* ---- Leaderboard ---- */
+let lbEntries = [];
+let lbBusy = false;
+
+async function lbGet() {
+  const res = await fetch(LB_API, { method: 'GET' });
+  if (!res.ok) throw new Error('lb_get_' + res.status);
+  const j = await res.json();
+  return (j && j.ok && Array.isArray(j.entries)) ? j.entries : [];
+}
+async function lbPost(name) {
+  const s = scoreSummary();
+  const res = await fetch(LB_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: getPlayerId(), name,
+      total: Math.max(0, Math.floor(s.total)),
+      vibes: Math.floor(s.vibes), ascensions: Math.floor(s.ascensions), ach: s.ach,
+    }),
+  });
+  if (!res.ok) throw new Error('lb_post_' + res.status);
+  return res.json();
+}
+function setLbMsg(text, cls) {
+  const el = $('lbMsg');
+  if (el) { el.textContent = text || ''; el.className = 'cloud-msg' + (cls ? ' ' + cls : ''); }
+}
+function myRank() {
+  const id = localStorage.getItem(PLAYER_ID_KEY);
+  if (!id) return 0;
+  const i = lbEntries.findIndex(e => e.id === id);
+  return i < 0 ? 0 : i + 1;
+}
+function updateRankPill() {
+  const pill = $('rankPill');
+  if (!pill) return;
+  const r = myRank();
+  pill.textContent = r ? '#' + r : '—';
+  pill.classList.toggle('on', r > 0 && r <= 10);
+}
+function renderLbList() {
+  const root = $('lbList');
+  if (!root) return;
+  if (!lbEntries.length) { root.innerHTML = '<div class="lb-empty">No scores yet — be the first!</div>'; return; }
+  const myId = localStorage.getItem(PLAYER_ID_KEY);
+  root.innerHTML = '';
+  lbEntries.forEach((e, i) => {
+    const rank = i + 1;
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (rank <= 3 ? ' top' : '') + (e.id === myId ? ' me' : '');
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank;
+    const sub = `🪐 ${fmt(e.vibes || 0)}${e.ascensions ? ' · ♻️ ' + e.ascensions : ''}${e.ach ? ' · 🏆 ' + e.ach : ''}`;
+    row.innerHTML =
+      `<div class="lb-rank">${medal}</div>` +
+      `<div class="lb-name"><span class="lb-nm">${lbEsc(e.name || 'anon')}</span><span class="lb-sub">${sub}</span></div>` +
+      `<div class="lb-score">${fmt(e.total || 0)}</div>`;
+    root.appendChild(row);
+  });
+}
+async function refreshLeaderboard() {
+  try { lbEntries = await lbGet(); renderLbList(); updateRankPill(); }
+  catch (e) { const root = $('lbList'); if (root) root.innerHTML = '<div class="lb-empty">Couldn’t load the leaderboard. Try again.</div>'; }
+}
+async function submitScore() {
+  if (lbBusy) return;
+  const inp = $('lbName');
+  const name = ((inp && inp.value) || '').trim().slice(0, 16);
+  if (!name) { setLbMsg('Enter a name to claim your spot.', 'err'); if (inp) inp.focus(); return; }
+  lbBusy = true;
+  const btn = $('lbSubmit');
+  if (btn) btn.disabled = true;
+  setLbMsg('Submitting…');
+  try {
+    state.playerName = name;
+    localStorage.setItem(NAME_KEY, name);
+    const r = await lbPost(name);
+    if (r && r.ok) {
+      if (Array.isArray(r.entries)) lbEntries = r.entries;
+      renderLbList();
+      updateRankPill();
+      const rank = r.rank || myRank();
+      setLbMsg(rank ? `You’re #${rank} all-time!` : 'Submitted!', 'ok');
+      if (!state.rankedOnce) { state.rankedOnce = 1; checkAchievements(); }
+      save(true);
+      showToast('🏆', 'On the board', rank ? '#' + rank + ' all-time' : 'Score submitted');
+      haptic([0, 16, 40, 16]);
+    } else {
+      setLbMsg('Couldn’t submit. Try again.', 'err');
+    }
+  } catch (e) {
+    setLbMsg('Couldn’t reach the leaderboard. Try again.', 'err');
+  }
+  if (btn) btn.disabled = false;
+  lbBusy = false;
+}
+function openLbModal() {
+  const inp = $('lbName');
+  if (inp && !inp.value) inp.value = savedName();
+  setLbMsg('');
+  const root = $('lbList');
+  if (root) root.innerHTML = '<div class="lb-empty">Loading…</div>';
+  if ($('lbModal')) $('lbModal').classList.add('show');
+  refreshLeaderboard();
+}
+function closeLbModal() { if ($('lbModal')) $('lbModal').classList.remove('show'); }
+
+(function competeInit() {
+  const wire = (id, fn, evt) => { const el = $(id); if (el) el.addEventListener(evt || 'click', fn); };
+  wire('shareBtn', shareScore);
+  wire('leaderboardBtn', openLbModal);
+  wire('lbClose', closeLbModal);
+  wire('lbSubmit', submitScore);
+  const modal = $('lbModal');
+  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeLbModal(); });
+  const nameInp = $('lbName');
+  if (nameInp) nameInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitScore(); });
+  // If this player has used the leaderboard before, fetch their standing in the
+  // background so the sidebar rank pill is accurate (skipped for newcomers).
+  if (state.rankedOnce || localStorage.getItem(NAME_KEY)) {
+    setTimeout(() => { refreshLeaderboard().catch(() => {}); }, 1500);
+  }
 })();
 </script>
 </body>
